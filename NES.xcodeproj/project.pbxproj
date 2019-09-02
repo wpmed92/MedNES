@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		805B6F6B2055C7A900B79546 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 805B6F6A2055C7A900B79546 /* main.cpp */; };
+		80BA5FC820571F3000336A80 /* 6502.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80BA5FC620571F3000336A80 /* 6502.cpp */; };
+		80BA5FCB2057250E00336A80 /* RAM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80BA5FC92057250E00336A80 /* RAM.cpp */; };
+		80CD8C0D2062F62E007DF492 /* ROM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0B2062F62E007DF492 /* ROM.cpp */; };
+		80CD8C102062F640007DF492 /* PPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0E2062F640007DF492 /* PPU.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +27,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		803F11EC2066E0BC0020FCD2 /* INESBus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = INESBus.hpp; sourceTree = "<group>"; };
 		805B6F672055C7A900B79546 /* NES */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NES; sourceTree = BUILT_PRODUCTS_DIR; };
 		805B6F6A2055C7A900B79546 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		80BA5FC620571F3000336A80 /* 6502.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = 6502.cpp; sourceTree = "<group>"; };
+		80BA5FC720571F3000336A80 /* 6502.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = 6502.hpp; sourceTree = "<group>"; };
+		80BA5FC92057250E00336A80 /* RAM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RAM.cpp; sourceTree = "<group>"; };
+		80BA5FCA2057250E00336A80 /* RAM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RAM.hpp; sourceTree = "<group>"; };
+		80CD8C0B2062F62E007DF492 /* ROM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ROM.cpp; sourceTree = "<group>"; };
+		80CD8C0C2062F62E007DF492 /* ROM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ROM.hpp; sourceTree = "<group>"; };
+		80CD8C0E2062F640007DF492 /* PPU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PPU.cpp; sourceTree = "<group>"; };
+		80CD8C0F2062F640007DF492 /* PPU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PPU.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +71,15 @@
 			isa = PBXGroup;
 			children = (
 				805B6F6A2055C7A900B79546 /* main.cpp */,
+				80BA5FC620571F3000336A80 /* 6502.cpp */,
+				80BA5FC720571F3000336A80 /* 6502.hpp */,
+				80BA5FC92057250E00336A80 /* RAM.cpp */,
+				80BA5FCA2057250E00336A80 /* RAM.hpp */,
+				80CD8C0B2062F62E007DF492 /* ROM.cpp */,
+				80CD8C0C2062F62E007DF492 /* ROM.hpp */,
+				80CD8C0E2062F640007DF492 /* PPU.cpp */,
+				80CD8C0F2062F640007DF492 /* PPU.hpp */,
+				803F11EC2066E0BC0020FCD2 /* INESBus.hpp */,
 			);
 			path = NES;
 			sourceTree = "<group>";
@@ -119,6 +141,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				80CD8C102062F640007DF492 /* PPU.cpp in Sources */,
+				80BA5FCB2057250E00336A80 /* RAM.cpp in Sources */,
+				80BA5FC820571F3000336A80 /* 6502.cpp in Sources */,
+				80CD8C0D2062F62E007DF492 /* ROM.cpp in Sources */,
 				805B6F6B2055C7A900B79546 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
