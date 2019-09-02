@@ -69,6 +69,8 @@ private:
     inline void setZero(bool);
     inline void setCarry(bool);
     
+    void irq();
+    
     void pushStack(uint8_t);
     
     uint8_t popStack();

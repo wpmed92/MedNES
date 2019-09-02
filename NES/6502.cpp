@@ -24,6 +24,12 @@ uint8_t CPU6502::fetchInstruction() {
     return *read(programCounter);
 }
 
+void CPU6502::irq() {
+    uint8_t newLsb = *read(0xFFFE);
+    uint8_t newMsb = *read(0xFFFF);
+    programCounter = newMsb * 256 + newLsb;
+}
+
 uint16_t CPU6502::accumulator_adr() {
     return (uint16_t) accumulator;
 }
@@ -454,19 +460,74 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             break;
             
         //ROL
-        //TODO
+        case 0x2A:
+            ROL(nullptr);
+            break;
+        case 0x26:
+            ROL(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x36:
+            ROL(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x2E:
+            ROL(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0x3E:
+            ROL(std::bind(&CPU6502::absoluteX, this));
+            break;
             
         //ROR
-        //TODO
+        case 0x6A:
+            ROR(nullptr);
+            break;
+        case 0x66:
+            ROR(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x76:
+            ROR(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x6E:
+            ROR(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0x7E:
+            ROR(std::bind(&CPU6502::absoluteX, this));
+            break;
             
         //RTI
-        //TODO
+        case 0x40:
+            RTI();
+            break;
             
         //RTS
-        //TODO
+        case 0x60:
+            RTS();
+            break;
             
         //SBC
-        //TODO
+        case 0xE9:
+            SBC(std::bind(&CPU6502::immediate, this));
+            break;
+        case 0xE5:
+            SBC(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0xF5:
+            SBC(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0xED:
+            SBC(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0xFD:
+            SBC(std::bind(&CPU6502::absoluteX, this));
+            break;
+        case 0xF9:
+            SBC(std::bind(&CPU6502::absoluteY, this));
+            break;
+        case 0xE1:
+            SBC(std::bind(&CPU6502::indirectX, this));
+            break;
+        case 0xF1:
+            SBC(std::bind(&CPU6502::indirectY, this));
+            break;
             
         //SEC
         case 0x38:
@@ -484,13 +545,49 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             break;
             
         //STA
-        //TODO
-            
-        //STY
-        //TODO
+        case 0x85:
+            STA(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x95:
+            STA(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x8D:
+            STA(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0x9D:
+            STA(std::bind(&CPU6502::absoluteX, this));
+            break;
+        case 0x99:
+            STA(std::bind(&CPU6502::absoluteY, this));
+            break;
+        case 0x81:
+            STA(std::bind(&CPU6502::indirectX, this));
+            break;
+        case 0x91:
+            STA(std::bind(&CPU6502::indirectY, this));
+            break;
             
         //STX
-        //TODO
+        case 0x86:
+            STX(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x96:
+            STX(std::bind(&CPU6502::zeroPageY, this));
+            break;
+        case 0x8E:
+            STX(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        //STY
+        case 0x84:
+            STY(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x94:
+            STY(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x8C:
+            STY(std::bind(&CPU6502::absolute, this));
+            break;
             
         //TAX
         case 0xAA:
@@ -708,7 +805,13 @@ void CPU6502::BPL() {
 }
 
 void CPU6502::BRK() {
-    //TODO: implement interrupt request generation
+    uint8_t lsb = programCounter & 0xFF;
+    uint8_t msb = programCounter >> 8;
+    pushStack(lsb);
+    pushStack(msb);
+    pushStack(statusRegister);
+    irq();
+    setBreak(1);
 }
 
 void CPU6502::BVC() {
@@ -771,7 +874,7 @@ void CPU6502::CPY(std::function<uint16_t()> addressing) {
 
 void CPU6502::DEC(std::function<uint16_t()> addressing) {
     uint8_t* data = read(addressing());
-    *data = *data - 1;
+    (*data)--;
     setZero(*data == 0);
     setNegative(*data > 127);
 }
@@ -912,15 +1015,20 @@ void CPU6502::ROR(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::RTI() {
-    //The RTI instruction is used at the end of an interrupt processing routine. It pulls the processor flags from the stack followed by the program counter.
+    statusRegister = popStack();
+    uint8_t pcMsb = popStack();
+    uint8_t pcLsb = popStack();
+    programCounter = pcMsb * 256 + pcLsb;
 }
 
 void CPU6502::RTS() {
-    //The RTS instruction is used at the end of a subroutine to return to the calling routine. It pulls the program counter (minus one) from the stack.
+    uint8_t pcMsb = popStack();
+    uint8_t pcLsb = popStack();
+    programCounter = pcMsb * 256 + pcLsb + 1;
 }
 
 void CPU6502::SBC(std::function<uint16_t()> addressing) {
-    //This instruction subtracts the contents of a memory location to the accumulator together with the not of the carry bit. If overflow occurs the carry bit is clear, this enables multiple byte subtraction to be performed.
+    
 }
 
 void CPU6502::SEC() {
@@ -936,18 +1044,15 @@ void CPU6502::SEI() {
 }
 
 void CPU6502::STA(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
-    data = accumulator;
+    write(addressing(), accumulator);
 }
 
 void CPU6502::STX(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
-    data = xRegister;
+    write(addressing(), xRegister);
 }
 
 void CPU6502::STY(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
-    data = yRegister;
+    write(addressing(), yRegister);
 }
 
 void CPU6502::TAX() {
