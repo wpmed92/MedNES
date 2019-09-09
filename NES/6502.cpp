@@ -9,25 +9,82 @@
 #include "6502.hpp"
 #include <assert.h>
 
-void CPU6502::run(bool testMode) {
-    //init program counter = $FFFC, $FFFD
-    programCounter = testMode ? 16416 : *read(0xFFFD) * 256 + *read(0xFFFC);
+void CPU6502::run(int stepCount) {
+    reset();
+    int stepCounter = 0;
     
-    while (true) {
-        uint8_t instruction = fetchInstruction();
-        executeInstruction(instruction);
-        programCounter++;
+    //TEST output should be something like this
+    //C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0,  0 CYC:7
+    while (stepCounter != stepCount) {
+        step();
+        stepCounter++;
     }
+}
+
+void CPU6502::step() {
+    LOG_PC();
+    uint8_t instruction = fetchInstruction();
+    LOG_EXEC(instruction);
+    executeInstruction(instruction);
+    LOG_CPU_STATE();
+    PRINT_LOG();
+    programCounter++;
+}
+
+ExecutionState* CPU6502::getExecutionState() {
+    ExecutionState* execState = new ExecutionState();
+    
+    execState->accumulator = accumulator;
+    execState->xRegister = xRegister;
+    execState->yRegister = yRegister;
+    execState->statusRegister = statusRegister;
+    execState->programCounter = programCounter;
+    execState->stackPointer = stackPointer;
+    
+    return execState;
+}
+
+void CPU6502::setProgramCounter(uint16_t pc) {
+    programCounter = pc;
+}
+
+inline void CPU6502::LOG_EXEC(uint8_t instr) {
+    execLog << std::hex << static_cast<int>(instr) << " ";
+}
+
+inline void CPU6502::LOG_PC() {
+    uint8_t lsb = programCounter & 0xFF;
+    uint8_t msb = programCounter >> 8;
+    uint16_t pc = msb * 256 + lsb;
+    execLog << std::hex <<  static_cast<int>(pc) << " ";
+}
+
+inline void CPU6502::LOG_CPU_STATE() {
+    execLog << "   A:" << std::hex << static_cast<int>(accumulator) <<
+    " X:"  << std::hex << static_cast<int>(xRegister) <<
+    " Y:"  << std::hex << static_cast<int>(yRegister) <<
+    " P:"  << std::hex << static_cast<int>(statusRegister) <<
+    " SP:" << std::hex << static_cast<int>(stackPointer);
+}
+
+inline void CPU6502::PRINT_LOG() {
+    std::cout << execLog.str() << "\n";
+    execLog.str("");
 }
 
 uint8_t CPU6502::fetchInstruction() {
     return *read(programCounter);
 }
 
+void CPU6502::reset() {
+    //init program counter = $FFFC, $FFFD
+    programCounter = *read(0xFFFD) * 256 + *read(0xFFFC);
+}
+
 void CPU6502::irq() {
-    uint8_t newLsb = *read(0xFFFE);
-    uint8_t newMsb = *read(0xFFFF);
-    programCounter = newMsb * 256 + newLsb;
+    uint8_t lsb = *read(0xFFFE);
+    uint8_t msb = *read(0xFFFF);
+    programCounter = msb * 256 + lsb;
 }
 
 uint16_t CPU6502::accumulator_adr() {
@@ -93,6 +150,12 @@ uint16_t CPU6502::indirectY() {
     uint16_t address = (msb * 256 + lsb) + yRegister;
     
     return address;
+}
+
+uint16_t CPU6502::relative() {
+    int8_t offset = *read(++programCounter);
+    
+    return programCounter + offset;
 }
 
 void CPU6502::executeInstruction(uint8_t instruction) {
@@ -169,45 +232,53 @@ void CPU6502::executeInstruction(uint8_t instruction) {
         //START BRANCH INSTRUCTIONS, ALL RELATIVE!
         //BCC
         case 0x90:
-            BCC();
+            BCC(std::bind(&CPU6502::relative, this));
             break;
             
         //BCS
         case 0xB0:
-            BCS();
+            BCS(std::bind(&CPU6502::relative, this));
             break;
             
         //BEQ
         case 0xF0:
-            BEQ();
+            BEQ(std::bind(&CPU6502::relative, this));
             break;
             
         //BMI
         case 0x30:
-            BMI();
+            BMI(std::bind(&CPU6502::relative, this));
             break;
         
         //BNE
         case 0xD0:
-            BNE();
+            BNE(std::bind(&CPU6502::relative, this));
             break;
             
         //BPL
         case 0x10:
-            BPL();
+            BPL(std::bind(&CPU6502::relative, this));
             break;
             
         //BVC
         case 0x50:
-            BVC();
+            BVC(std::bind(&CPU6502::relative, this));
             break;
             
         //BVS
         case 0x70:
-            BVS();
+            BVS(std::bind(&CPU6502::relative, this));
             break;
         //END BRANCH INSTRUCTION
         
+        //BIT
+        case 0x24:
+            BIT(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x2C:
+            BIT(std::bind(&CPU6502::absolute, this));
+            break;
+            
         //BRK - Force interupt
         case 0x00:
             BRK();
@@ -429,7 +500,21 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             break;
         
         //LSR
-        //TODO
+        case 0x4A:
+            LSR(nullptr);
+            break;
+        case 0x46:
+            LSR(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x56:
+            LSR(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x4E:
+            LSR(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0x5E:
+            LSR(std::bind(&CPU6502::absoluteX, this));
+            break;
             
         //NOP
         case 0xEA:
@@ -437,7 +522,30 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             break;
         
         //ORA
-        //TODO
+        case 0x09:
+            ORA(std::bind(&CPU6502::immediate, this));
+            break;
+        case 0x05:
+            ORA(std::bind(&CPU6502::zeroPage, this));
+            break;
+        case 0x15:
+            ORA(std::bind(&CPU6502::zeroPageX, this));
+            break;
+        case 0x0D:
+            ORA(std::bind(&CPU6502::absolute, this));
+            break;
+        case 0x1D:
+            ORA(std::bind(&CPU6502::absoluteX, this));
+            break;
+        case 0x19:
+            ORA(std::bind(&CPU6502::absoluteY, this));
+            break;
+        case 0x01:
+            ORA(std::bind(&CPU6502::indirectX, this));
+            break;
+        case 0x11:
+            ORA(std::bind(&CPU6502::indirectY, this));
+            break;
             
         //PHA
         case 0x48:
@@ -625,22 +733,27 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
     uint8_t* readData = nullptr;
     
     if (address >= 0 && address < 8192) {
-        //2KB internal RAM
-        
         if (mode == MemoryAccessMode::READ) {
             readData = ram->read(address);
         } else {
             ram->write(address, data);
         }
     } else if (address >= 8192 && address < 16384) {
-        //PPU registers
-        address %= 8;
+        if (mode == MemoryAccessMode::READ) {
+            readData = ppu->read(address);
+        } else {
+            ppu->write(address, data);
+        }
     } else if (address >= 16384 && address < 16408) {
         //APU I/O registers
     } else if (address >= 16408 && address < 16416) {
         //CPU test mode
-    } else if (address >= 16416 && address < 65535) {
+    } else if (address >= 0x8000 && address < 0xFFFF) {
         readData = rom->read(address);
+    }
+    
+    if (readData != nullptr) {
+        LOG_EXEC(*readData);
     }
     
     return readData;
@@ -658,7 +771,7 @@ inline void CPU6502::setSRFlag(CPU6502::StatusFlags flag, bool val) {
     if (val) {
         statusRegister |= (1 << flag);
     } else {
-        statusRegister ^= (1 << flag);
+        statusRegister &= ~(1 << flag);
     }
 }
 
@@ -670,8 +783,12 @@ inline void CPU6502::setOverflow(bool val) {
     setSRFlag(StatusFlags::OVERFLOW, val);
 }
 
-inline void CPU6502::setBreak(bool val) {
-    setSRFlag(StatusFlags::BREAK, val);
+inline void CPU6502::setBreak4(bool val) {
+    setSRFlag(StatusFlags::BREAK4, val);
+}
+
+inline void CPU6502::setBreak5(bool val) {
+    setSRFlag(StatusFlags::BREAK5, val);
 }
 
 inline void CPU6502::setDecimal(bool val) {
@@ -698,23 +815,25 @@ void CPU6502::pushStack(uint8_t data) {
 uint8_t CPU6502::popStack() {
     stackPointer++;
     return *read(stackPointer + 256);
-    
 }
 
 void CPU6502::ADC(std::function<uint16_t()> addressing) {
     uint8_t data = *read(addressing());
     uint8_t carry = statusRegister & 1;
     uint16_t sum = data + accumulator + carry;
-    uint8_t bit7 = (accumulator >> 7) & 1;
+    //if( (A ^ s) & (v ^ s) & 0x80 )
+    bool overflow = (accumulator ^ sum) & (data ^ sum) & 0x80;
     
     if (sum - 256 >= 0) {
         sum -= 256;
         setCarry(1);
+    } else {
+        setCarry(0);
     }
     
     setNegative(sum > 127);
     setZero(sum == 0);
-    setOverflow(bit7 != ((sum >> 7) & 1));
+    setOverflow(overflow);
     accumulator = sum;
 }
 
@@ -737,38 +856,41 @@ void CPU6502::ASL(std::function<uint16_t()> addressing) {
     *data <<= 1;
     setCarry(bit7);
     setNegative(*data > 127);
-    setZero(data == 0);
+    setZero(*data == 0);
 }
 
-void CPU6502::BCC() {
-    uint8_t data = 1;
+void CPU6502::BCC(std::function<uint16_t()> resolvePC) {
     uint8_t carry = statusRegister & 1;
     
     if (!carry) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BCS() {
-    uint8_t data = 1;
+void CPU6502::BCS(std::function<uint16_t()> resolvePC) {
     uint8_t carry = statusRegister & 1;
     
     if (carry) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BEQ() {
-    uint8_t data = 1;
+void CPU6502::BEQ(std::function<uint16_t()> resolvePC) {
     uint8_t zero = (statusRegister >> 1) & 1;
     
     if (zero) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BIT() {
-    uint8_t data = 1;
+void CPU6502::BIT(std::function<uint16_t()> addressing) {
+    uint8_t data = *read(addressing());
     uint8_t result = accumulator & data;
     uint8_t data_bit6 = (data >> 6) & 1;
     uint8_t data_bit7 = (data >> 7) & 1;
@@ -777,30 +899,33 @@ void CPU6502::BIT() {
     setNegative(data_bit7);
 }
 
-void CPU6502::BMI() {
-    uint8_t data = 1;
+void CPU6502::BMI(std::function<uint16_t()> resolvePC) {
     uint8_t neg = (statusRegister >> 7) & 1;
     
     if (neg) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BNE() {
-    uint8_t data = 1;
+void CPU6502::BNE(std::function<uint16_t()> resolvePC) {
     uint8_t zero = (statusRegister >> 1) & 1;
     
     if (!zero) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BPL() {
-    uint8_t data = 1;
+void CPU6502::BPL(std::function<uint16_t()> resolvePC) {
     uint8_t neg = (statusRegister >> 7) & 1;
     
     if (!neg) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
@@ -809,26 +934,32 @@ void CPU6502::BRK() {
     uint8_t msb = programCounter >> 8;
     pushStack(lsb);
     pushStack(msb);
-    pushStack(statusRegister);
+    uint8_t statusRegCpy = statusRegister;
+    statusRegCpy |= (1 << 4);
+    statusRegCpy |= (1 << 5);
+    pushStack(statusRegCpy);
     irq();
-    setBreak(1);
+    setBreak4(1);
+    setBreak5(1);
 }
 
-void CPU6502::BVC() {
-    uint8_t data = 1;
+void CPU6502::BVC(std::function<uint16_t()> resolvePC) {
     uint8_t overflow = (statusRegister >> 6) & 1;
     
     if (!overflow) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
-void CPU6502::BVS() {
-    uint8_t data = 1;
+void CPU6502::BVS(std::function<uint16_t()> resolvePC) {
     uint8_t overflow = (statusRegister >> 6) & 1;
     
     if (overflow) {
-        programCounter += data;
+        programCounter = resolvePC();
+    } else {
+        programCounter++;
     }
 }
 
@@ -921,9 +1052,9 @@ void CPU6502::JMP(std::function<uint16_t()> addressing) {
     if (addressing == nullptr) {
         uint8_t lsb = *read(programCounter + 1);
         uint8_t msb = *read(programCounter + 2);
-        programCounter = msb * 256 + lsb;
+        programCounter = msb * 256 + lsb - 1;
     } else {
-        programCounter = addressing();
+        programCounter = addressing() - 1;
     }
 }
 
@@ -933,7 +1064,7 @@ void CPU6502::JSR(std::function<uint16_t()> addressing) {
     uint8_t msb = programCounter >> 8;
     pushStack(lsb);
     pushStack(msb);
-    programCounter = jumpAddress;
+    programCounter = jumpAddress - 1;
 }
 
 void CPU6502::LDA(std::function<uint16_t()> addressing) {
@@ -955,12 +1086,19 @@ void CPU6502::LDY(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::LSR(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
-    uint8_t bit0 = data & 1;
-    data >>= 1;
+    uint8_t* data = nullptr;
+    
+    if (addressing == nullptr) {
+        data = &accumulator;
+    } else {
+        data = read(addressing());
+    }
+    
+    uint8_t bit0 = *data & 1;
+    *data >>= 1;
     setCarry(bit0);
-    setNegative(data > 127);
-    setZero(data == 0);
+    setNegative(*data > 127);
+    setZero(*data == 0);
 }
 
 void CPU6502::NOP() {
@@ -968,7 +1106,7 @@ void CPU6502::NOP() {
 }
 
 void CPU6502::ORA(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
+    uint8_t data = *read(addressing());
     accumulator |= data;
     setZero(accumulator == 0);
     setNegative(accumulator > 127);
@@ -979,7 +1117,10 @@ void CPU6502::PHA() {
 }
 
 void CPU6502::PHP() {
-    pushStack(statusRegister);
+    uint8_t statusRegCpy = statusRegister;
+    statusRegCpy |= (1 << 4);
+    statusRegCpy |= (1 << 5);
+    pushStack(statusRegCpy);
 }
 
 void CPU6502::PLA() {
@@ -990,28 +1131,30 @@ void CPU6502::PLA() {
 
 void CPU6502::PLP() {
     statusRegister = popStack();
+    setBreak4(0);
+    setBreak5(1); //Compatibilty with Nintendulator
 }
 
 void CPU6502::ROL(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
+    uint8_t* data = read(addressing());
     uint8_t carry = statusRegister & 1;
-    uint8_t bit7 = (data >> 7) & 1;
-    data <<= 1;
-    data |= carry;
+    uint8_t bit7 = (*data >> 7) & 1;
+    *data <<= 1;
+    *data |= carry;
     setCarry(bit7);
-    setZero(data == 0);
-    setNegative(data > 127);
+    setZero(*data == 0);
+    setNegative(*data > 127);
 }
 
 void CPU6502::ROR(std::function<uint16_t()> addressing) {
-    uint8_t data = 1;
+    uint8_t* data = read(addressing());
     uint8_t carry = statusRegister & 1;
-    uint8_t bit0 = data & 1;
-    data >>= 1;
-    data |= carry << 7;
+    uint8_t bit0 = *data & 1;
+    *data >>= 1;
+    *data |= carry << 7;
     setCarry(bit0);
-    setZero(data == 0);
-    setNegative(data > 127);
+    setZero(*data == 0);
+    setNegative(*data > 127);
 }
 
 void CPU6502::RTI() {
@@ -1024,11 +1167,19 @@ void CPU6502::RTI() {
 void CPU6502::RTS() {
     uint8_t pcMsb = popStack();
     uint8_t pcLsb = popStack();
-    programCounter = pcMsb * 256 + pcLsb + 1;
+    programCounter = pcMsb * 256 + pcLsb;
 }
 
 void CPU6502::SBC(std::function<uint16_t()> addressing) {
-    
+    uint8_t data = *read(addressing());
+    uint8_t carry = statusRegister & 1;
+    uint16_t result = accumulator - data - !carry;
+    uint8_t overflow = (accumulator ^ result) & (~(data ^ result)) & 0x80;
+    setZero(result == 0);
+    setOverflow(overflow);
+    setNegative(result > 127);
+    setCarry(!(result & 0x100));
+    accumulator = result;
 }
 
 void CPU6502::SEC() {
@@ -1087,71 +1238,4 @@ void CPU6502::TYA() {
     accumulator = yRegister;
     setZero(accumulator == 0);
     setNegative(accumulator > 127);
-}
-
-//STATUS REGISTER TESTS
-void CPU6502::testStatusFlagsSet() {
-    //Initially zero
-    assert(statusRegister == 0);
-    
-    //Carry set
-    setCarry(1);
-    assert(statusRegister == 1);
-    
-    //Zero set
-    setZero(1);
-    assert(statusRegister == 3);
-    
-    //Interrupt disable set
-    setInterruptDisable(1);
-    assert(statusRegister == 7);
-    
-    //Decimal set
-    setDecimal(1);
-    assert(statusRegister == 15);
-    
-    //Break set
-    setBreak(1);
-    assert(statusRegister == 31);
-    
-    //Overflow set
-    setOverflow(1);
-    assert(statusRegister == 95);
-    
-    //Negative set
-    setNegative(1);
-    assert(statusRegister == 223);
-}
-
-void CPU6502::testStatusFlagsUnset() {
-    //Initially 11011111 = 223
-    statusRegister = 223;
-    
-    //Carry
-    setCarry(0);
-    assert(statusRegister == 222);
-    
-    //Zero
-    setZero(0);
-    assert(statusRegister == 220);
-    
-    //Interrupt
-    setInterruptDisable(0);
-    assert(statusRegister == 216);
-    
-    //Decimal
-    setDecimal(0);
-    assert(statusRegister == 208);
-    
-    //Break
-    setBreak(0);
-    assert(statusRegister == 192);
-    
-    //Overflow
-    setOverflow(0);
-    assert(statusRegister == 128);
-    
-    //Negative
-    setNegative(0);
-    assert(statusRegister == 0);
 }

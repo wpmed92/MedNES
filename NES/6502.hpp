@@ -12,38 +12,40 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include <sstream>
+#include <iostream>
 #include "RAM.hpp"
 #include "ROM.hpp"
 #include "PPU.hpp"
+
+struct ExecutionState {
+    uint8_t accumulator;
+    uint8_t xRegister;
+    uint8_t yRegister;
+    uint16_t programCounter;
+    uint8_t stackPointer;
+    uint8_t statusRegister;
+};
 
 class CPU6502 {
     
 private:
     //Arithmetic
-    uint8_t accumulator;
-    uint8_t xRegister;
-    uint8_t yRegister;
+    uint8_t accumulator = 0;
+    uint8_t xRegister = 0;
+    uint8_t yRegister = 0;
     
     //Other
-    uint16_t programCounter;
-    uint8_t stackPointer;
-    uint8_t statusRegister;
+    uint16_t programCounter = 0;
+    uint8_t stackPointer = 0xFD;
+    uint8_t statusRegister = 0x24;
     
     //Devices
     RAM* ram;
     ROM* rom;
     PPU* ppu;
     
-    enum AddressingModes {
-        IMMEDIATE,
-        ZEROPAGE,
-        ZEROPAGEX,
-        ABSOLUTE,
-        ABSOLUTEX,
-        ABSOLUTEY,
-        INDIRECTX,
-        INDIRECTY
-    };
+    std::stringstream execLog;
     
     enum MemoryAccessMode {
         READ,
@@ -53,7 +55,8 @@ private:
     enum StatusFlags {
         NEGATIVE = 7,
         OVERFLOW = 6,
-        BREAK = 4,
+        BREAK5 = 5,
+        BREAK4 = 4,
         DECIMAL = 3,
         INTERRUPT = 2,
         ZERO = 1,
@@ -63,18 +66,32 @@ private:
     inline void setSRFlag(StatusFlags, bool);
     inline void setNegative(bool);
     inline void setOverflow(bool);
-    inline void setBreak(bool);
+    inline void setBreak4(bool);
+    inline void setBreak5(bool);
     inline void setDecimal(bool);
     inline void setInterruptDisable(bool);
     inline void setZero(bool);
     inline void setCarry(bool);
     
+    //vectors
     void irq();
     
+    void reset();
+    
+    inline void LOG_EXEC(uint8_t instr);
+    
+    inline void LOG_PC();
+    
+    inline void LOG_CPU_STATE();
+    
+    inline void PRINT_LOG();
+    
+    //stack
     void pushStack(uint8_t);
     
     uint8_t popStack();
     
+    //addressing
     uint16_t accumulator_adr();
     
     uint16_t immediate();
@@ -95,6 +112,8 @@ private:
     
     uint16_t indirectY();
     
+    uint16_t relative();
+    
     void ADC(std::function<uint16_t()>);
     
     //And with accumulator
@@ -104,34 +123,34 @@ private:
     void ASL(std::function<uint16_t()>);
     
     //Branch on carry clear
-    void BCC();
+    void BCC(std::function<uint16_t()>);
     
     //branch on carry set
-    void BCS();
+    void BCS(std::function<uint16_t()>);
     
     //branch on equal (zero set)
-    void BEQ();
+    void BEQ(std::function<uint16_t()>);
     
     //Bit test
-    void BIT();
+    void BIT(std::function<uint16_t()>);
     
     //Branch on minus (negative set)
-    void BMI();
+    void BMI(std::function<uint16_t()>);
     
     //Branch on not equal (zero clear)
-    void BNE();
+    void BNE(std::function<uint16_t()>);
     
     //Branch on plus (negative clear)
-    void BPL();
+    void BPL(std::function<uint16_t()>);
     
     //Interrupt
     void BRK();
     
     //Branch on overflow clear
-    void BVC();
+    void BVC(std::function<uint16_t()>);
     
     //Branch on overflow set
-    void BVS();
+    void BVS(std::function<uint16_t()>);
     
     //Clear carry
     void CLC();
@@ -270,10 +289,10 @@ public:
     uint8_t* memoryAccess(MemoryAccessMode, uint16_t, uint8_t);
     uint8_t* read(uint16_t);
     void write(uint16_t, uint8_t);
-    void run(bool);
-    void testStatusFlagsSet();
-    void testStatusFlagsUnset();
-    
+    void run(int);
+    void step();
+    void setProgramCounter(uint16_t);
+    ExecutionState* getExecutionState();
 };
 
 #endif /* _502_hpp */

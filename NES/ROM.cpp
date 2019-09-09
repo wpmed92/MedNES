@@ -54,7 +54,7 @@ void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
 }
 
 uint8_t* ROM::read(uint16_t address) {
-    address = (address - 16416) % 16384;
+    address = (address - 0x8000) % 16384;
     return &prgCode[address];
 }
 

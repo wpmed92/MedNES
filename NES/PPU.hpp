@@ -15,15 +15,16 @@
 
 class PPU : public INESBus {
 private:
-    uint8_t ppuctrl;
-    uint8_t ppumask;
-    uint8_t ppustatus;
-    uint8_t oamaddr;
-    uint8_t oamdata;
-    uint8_t ppuscroll;
-    uint8_t ppuaddr;
-    uint8_t ppudata;
-    uint8_t oamdma;
+    uint8_t ppuctrl; //$2000
+    uint8_t ppumask; //$2001
+    uint8_t ppustatus; //$2002
+    uint8_t oamaddr; //$2003
+    uint8_t oamdata; //$2004
+    uint8_t ppuscroll; //$2005
+    uint8_t ppuaddr; //$2006
+    uint8_t ppudata; //$2007
+    uint8_t oamdma; //$4014
+    void router(uint16_t address);
 
 public:
     uint8_t* read(uint16_t address);
