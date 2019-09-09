@@ -137,7 +137,7 @@ uint16_t CPU6502::absoluteX() {
 uint16_t CPU6502::indirectX() {
     uint16_t operand = (*read(++programCounter) + xRegister) % 256;
     uint8_t lsb = *read(operand);
-    uint8_t msb = *read(operand+1);
+    uint8_t msb = *read((operand+1)%256);
     uint16_t address = msb * 256 + lsb;
     
     return address;
@@ -146,7 +146,7 @@ uint16_t CPU6502::indirectX() {
 uint16_t CPU6502::indirectY() {
     uint16_t operand = *read(++programCounter);
     uint8_t lsb = *read(operand);
-    uint8_t msb = *read(operand+1);
+    uint8_t msb = *read((operand+1)%256);
     uint16_t address = (msb * 256 + lsb) + yRegister;
     
     return address;
@@ -726,6 +726,11 @@ void CPU6502::executeInstruction(uint8_t instruction) {
         case 0x98:
             TYA();
             break;
+            
+        default:
+            std::cout << "Unkown instruction " << instruction;
+            programCounter++;
+            break;
     }
 }
 
@@ -1052,7 +1057,11 @@ void CPU6502::JMP(std::function<uint16_t()> addressing) {
     if (addressing == nullptr) {
         uint8_t lsb = *read(programCounter + 1);
         uint8_t msb = *read(programCounter + 2);
-        programCounter = msb * 256 + lsb - 1;
+        uint16_t address = msb * 256 + lsb;
+        uint8_t lsbt = *read(address);
+        uint16_t msbAddress = (address & 0xFF) == 0xFF ? address & 0xFF00 : address + 1;
+        uint8_t msbt = *read(msbAddress);
+        programCounter = msbt * 256 + lsbt - 1;
     } else {
         programCounter = addressing() - 1;
     }
@@ -1062,8 +1071,8 @@ void CPU6502::JSR(std::function<uint16_t()> addressing) {
     uint16_t jumpAddress = addressing();
     uint8_t lsb = programCounter & 0xFF;
     uint8_t msb = programCounter >> 8;
-    pushStack(lsb);
     pushStack(msb);
+    pushStack(lsb);
     programCounter = jumpAddress - 1;
 }
 
@@ -1136,7 +1145,14 @@ void CPU6502::PLP() {
 }
 
 void CPU6502::ROL(std::function<uint16_t()> addressing) {
-    uint8_t* data = read(addressing());
+    uint8_t* data = nullptr;
+    
+    if (addressing == nullptr) {
+        data = &accumulator;
+    } else {
+        data = read(addressing());
+    }
+    
     uint8_t carry = statusRegister & 1;
     uint8_t bit7 = (*data >> 7) & 1;
     *data <<= 1;
@@ -1147,7 +1163,14 @@ void CPU6502::ROL(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::ROR(std::function<uint16_t()> addressing) {
-    uint8_t* data = read(addressing());
+    uint8_t* data = nullptr;
+    
+    if (addressing == nullptr) {
+        data = &accumulator;
+    } else {
+        data = read(addressing());
+    }
+    
     uint8_t carry = statusRegister & 1;
     uint8_t bit0 = *data & 1;
     *data >>= 1;
@@ -1159,14 +1182,16 @@ void CPU6502::ROR(std::function<uint16_t()> addressing) {
 
 void CPU6502::RTI() {
     statusRegister = popStack();
-    uint8_t pcMsb = popStack();
+    setBreak4(0);
+    setBreak5(1);
     uint8_t pcLsb = popStack();
-    programCounter = pcMsb * 256 + pcLsb;
+    uint8_t pcMsb = popStack();
+    programCounter = pcMsb * 256 + pcLsb - 1;
 }
 
 void CPU6502::RTS() {
-    uint8_t pcMsb = popStack();
     uint8_t pcLsb = popStack();
+    uint8_t pcMsb = popStack();
     programCounter = pcMsb * 256 + pcLsb;
 }
 

@@ -83,6 +83,8 @@ void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
             assert(("statusRegister is incorrect!", actualExecutionState->statusRegister == expectedExecutionState->statusRegister));
             assert(("stackpointer is incorrect!", actualExecutionState->stackPointer == expectedExecutionState->stackPointer));
             cpu.step();
+            delete expectedExecutionState;
+            delete actualExecutionState;
         }
         
         logFile.close();
