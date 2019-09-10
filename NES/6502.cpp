@@ -44,6 +44,15 @@ ExecutionState* CPU6502::getExecutionState() {
     return execState;
 }
 
+void CPU6502::setExecutionState(ExecutionState* executionState) {
+    accumulator = executionState->accumulator;
+    xRegister = executionState->xRegister;
+    yRegister = executionState->yRegister;
+    statusRegister = executionState->statusRegister;
+    programCounter = executionState->programCounter;
+    stackPointer = executionState->stackPointer;
+}
+
 void CPU6502::setProgramCounter(uint16_t pc) {
     programCounter = pc;
 }
@@ -161,8 +170,7 @@ uint16_t CPU6502::relative() {
 void CPU6502::executeInstruction(uint8_t instruction) {
     switch (instruction) {
         //ADC
-        case 0x69:
-            ADC(std::bind(&CPU6502::immediate, this));
+        case 0x69: ADC(std::bind(&CPU6502::immediate, this));
             break;
         case 0x65:
             ADC(std::bind(&CPU6502::zeroPage, this));
@@ -613,6 +621,7 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             
         //SBC
         case 0xE9:
+        case 0xEB:
             SBC(std::bind(&CPU6502::immediate, this));
             break;
         case 0xE5:

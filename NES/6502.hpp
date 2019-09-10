@@ -25,6 +25,8 @@ struct ExecutionState {
     uint16_t programCounter;
     uint8_t stackPointer;
     uint8_t statusRegister;
+    bool isUnofficialOpcode;
+    uint8_t unofficialOffset;
 };
 
 class CPU6502 {
@@ -293,6 +295,7 @@ public:
     void step();
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();
+    void setExecutionState(ExecutionState*);
 };
 
 #endif /* _502_hpp */

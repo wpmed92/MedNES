@@ -54,6 +54,13 @@ ExecutionState* CPUTest::parseExecutionStateFromLogLine(std::string line) {
     expectedState->stackPointer = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);;
     lexerStream.str("");
     
+    //needed to skip unofficial opcode tests. very few games support them.
+    expectedState->isUnofficialOpcode = line[15] == '*';
+    
+    if (expectedState->isUnofficialOpcode) {
+        expectedState->unofficialOffset = (line[9] != ' ') + (line[12] != ' ') + 1;
+    }
+    
     return expectedState;
 }
 
@@ -70,19 +77,33 @@ void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
     std::string logLine;
     std::ifstream logFile (testLogPath);
     logFile >> std::noskipws;
+    bool previousLineUnnoficial = false;
     
     if (logFile.is_open()) {
         while (getline(logFile, logLine)) {
             expectedExecutionState = parseExecutionStateFromLogLine(logLine);
             actualExecutionState = cpu.getExecutionState();
             
-            assert(("Programcounter is incorrect!", actualExecutionState->programCounter == expectedExecutionState->programCounter));
-            assert(("Accumulator is incorrect!", actualExecutionState->accumulator == expectedExecutionState->accumulator));
-            assert(("xRegister is incorrect!", actualExecutionState->xRegister == expectedExecutionState->xRegister));
-            assert(("yRegister is incorrect!", actualExecutionState->yRegister == expectedExecutionState->yRegister));
-            assert(("statusRegister is incorrect!", actualExecutionState->statusRegister == expectedExecutionState->statusRegister));
-            assert(("stackpointer is incorrect!", actualExecutionState->stackPointer == expectedExecutionState->stackPointer));
-            cpu.step();
+            if (expectedExecutionState->isUnofficialOpcode) {
+                cpu.setProgramCounter(expectedExecutionState->programCounter + expectedExecutionState->unofficialOffset);
+                previousLineUnnoficial = true;
+            } else {
+                if (previousLineUnnoficial) {
+                    cpu.setExecutionState(expectedExecutionState);
+                    delete actualExecutionState;
+                    actualExecutionState = cpu.getExecutionState();
+                }
+                
+                previousLineUnnoficial = false;
+                assert(("Programcounter is incorrect!", actualExecutionState->programCounter == expectedExecutionState->programCounter));
+                assert(("Accumulator is incorrect!", actualExecutionState->accumulator == expectedExecutionState->accumulator));
+                assert(("xRegister is incorrect!", actualExecutionState->xRegister == expectedExecutionState->xRegister));
+                assert(("yRegister is incorrect!", actualExecutionState->yRegister == expectedExecutionState->yRegister));
+                assert(("statusRegister is incorrect!", actualExecutionState->statusRegister == expectedExecutionState->statusRegister));
+                assert(("stackpointer is incorrect!", actualExecutionState->stackPointer == expectedExecutionState->stackPointer));
+                cpu.step();
+            }
+            
             delete expectedExecutionState;
             delete actualExecutionState;
         }
