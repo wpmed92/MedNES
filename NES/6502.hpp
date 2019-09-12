@@ -25,8 +25,6 @@ struct ExecutionState {
     uint16_t programCounter;
     uint8_t stackPointer;
     uint8_t statusRegister;
-    bool isUnofficialOpcode;
-    uint8_t unofficialOffset;
 };
 
 class CPU6502 {
@@ -43,7 +41,7 @@ private:
     uint8_t statusRegister = 0x24;
     
     //Devices
-    RAM* ram;
+    RAM ram;
     ROM* rom;
     PPU* ppu;
     
@@ -94,8 +92,6 @@ private:
     uint8_t popStack();
     
     //addressing
-    uint16_t accumulator_adr();
-    
     uint16_t immediate();
     
     uint16_t zeroPage();
@@ -118,11 +114,17 @@ private:
     
     void ADC(std::function<uint16_t()>);
     
+    void ADC(uint8_t); //for RRA
+    
     //And with accumulator
     void AND(std::function<uint16_t()>);
     
+    void AND(uint8_t); //for RLA
+    
     //Arithmetic shift left
     void ASL(std::function<uint16_t()>);
+    
+    void ASL_val(uint8_t*); //for SLO
     
     //Branch on carry clear
     void BCC(std::function<uint16_t()>);
@@ -169,6 +171,8 @@ private:
     //Compare (with accumulator}
     void CMP(std::function<uint16_t()>);
     
+    void CMP(uint8_t); //for DCP
+    
     //Compare with X
     void CPX(std::function<uint16_t()>);
     
@@ -177,6 +181,8 @@ private:
     
     //Decrement
     void DEC(std::function<uint16_t()>);
+    
+    void DEC(uint8_t*); //for DCP
     
     //decrement X
     void DEX();
@@ -187,8 +193,12 @@ private:
     //Exclusive or (with accumulator)
     void EOR(std::function<uint16_t()>);
     
+    void EOR(uint8_t); //for SRE
+    
     //Increment
     void INC(std::function<uint16_t()>);
+    
+    void INC(uint8_t*); //for ISB
     
     //Increment X
     void INX();
@@ -205,8 +215,12 @@ private:
     //Load accumulator
     void LDA(std::function<uint16_t()>);
     
+    void LDA(uint8_t); //for LAX
+    
     //Load X
     void LDX(std::function<uint16_t()>);
+    
+    void LDX(uint8_t); //for LAX
     
     //Load Y
     void LDY(std::function<uint16_t()>);
@@ -214,11 +228,12 @@ private:
     //Logical shift right
     void LSR(std::function<uint16_t()>);
     
-    //No operation
-    void NOP();
+    void LSR_val(uint8_t*); //for SRE
     
     //Or with accumulator
     void ORA(std::function<uint16_t()>);
+    
+    void ORA(uint8_t); //for SLO
     
     //Push accumulator
     void PHA();
@@ -235,8 +250,12 @@ private:
     //Rotate left
     void ROL(std::function<uint16_t()>);
     
+    void ROL_val(uint8_t*);
+    
     //Rotate right
     void ROR(std::function<uint16_t()>);
+    
+    void ROR_val(uint8_t*); //for RRA
     
     //Return from interrupt
     void RTI();
@@ -246,6 +265,8 @@ private:
     
     //Subtract with carrz
     void SBC(std::function<uint16_t()>);
+    
+    void SBC(uint8_t); //for ISB
     
     //Set carry
     void SEC();
@@ -283,9 +304,27 @@ private:
     //Transfer Y to accumulator
     void TYA();
     
+    //UNOFFICIAL ONES
+    void NOP(std::function<uint16_t()>);
+    
+    void LAX(std::function<uint16_t()>);
+    
+    void SAX(std::function<uint16_t()>);
+    
+    void DCP(std::function<uint16_t()>);
+    
+    void ISB(std::function<uint16_t()>);
+    
+    void SLO(std::function<uint16_t()>);
+    
+    void RLA(std::function<uint16_t()>);
+    
+    void RRA(std::function<uint16_t()>);
+    
+    void SRE(std::function<uint16_t()>);
     
 public:
-    CPU6502(RAM* ram, ROM* rom, PPU* ppu) : ram(ram), rom(rom), ppu(ppu) {};
+    CPU6502(ROM* rom, PPU* ppu) : rom(rom), ppu(ppu) { };
     uint8_t fetchInstruction();
     void executeInstruction(uint8_t);
     uint8_t* memoryAccess(MemoryAccessMode, uint16_t, uint8_t);

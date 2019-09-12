@@ -12,7 +12,7 @@
 int main(int argc, const char * argv[]) {
     //CPU Tests
     CPUTest cpuTest;
-    cpuTest.runTest("/users/wpmed92/Desktop/NES/roms/nestest.nes", "/users/wpmed92/Desktop/NES/test/nestest.log");
+    cpuTest.runTest("/users/wpmed92/Desktop/NES/test/nestest.nes", "/users/wpmed92/Desktop/NES/test/nestest.log");
     
     return 0;
 }

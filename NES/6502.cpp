@@ -24,7 +24,6 @@ void CPU6502::run(int stepCount) {
 void CPU6502::step() {
     LOG_PC();
     uint8_t instruction = fetchInstruction();
-    LOG_EXEC(instruction);
     executeInstruction(instruction);
     LOG_CPU_STATE();
     PRINT_LOG();
@@ -42,15 +41,6 @@ ExecutionState* CPU6502::getExecutionState() {
     execState->stackPointer = stackPointer;
     
     return execState;
-}
-
-void CPU6502::setExecutionState(ExecutionState* executionState) {
-    accumulator = executionState->accumulator;
-    xRegister = executionState->xRegister;
-    yRegister = executionState->yRegister;
-    statusRegister = executionState->statusRegister;
-    programCounter = executionState->programCounter;
-    stackPointer = executionState->stackPointer;
 }
 
 void CPU6502::setProgramCounter(uint16_t pc) {
@@ -94,10 +84,6 @@ void CPU6502::irq() {
     uint8_t lsb = *read(0xFFFE);
     uint8_t msb = *read(0xFFFF);
     programCounter = msb * 256 + lsb;
-}
-
-uint16_t CPU6502::accumulator_adr() {
-    return (uint16_t) accumulator;
 }
 
 uint16_t CPU6502::immediate() {
@@ -170,7 +156,8 @@ uint16_t CPU6502::relative() {
 void CPU6502::executeInstruction(uint8_t instruction) {
     switch (instruction) {
         //ADC
-        case 0x69: ADC(std::bind(&CPU6502::immediate, this));
+        case 0x69:
+            ADC(std::bind(&CPU6502::immediate, this));
             break;
         case 0x65:
             ADC(std::bind(&CPU6502::zeroPage, this));
@@ -526,7 +513,7 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             
         //NOP
         case 0xEA:
-            NOP();
+            NOP(nullptr);
             break;
         
         //ORA
@@ -736,6 +723,264 @@ void CPU6502::executeInstruction(uint8_t instruction) {
             TYA();
             break;
             
+        //UNOFICIAL OPCODES
+        case 0x04:
+        case 0x44:
+        case 0x64:
+            NOP(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x0C:
+            NOP(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0x14:
+        case 0x34:
+        case 0x54:
+        case 0x74:
+        case 0xD4:
+        case 0xF4:
+            NOP(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA:
+            NOP(nullptr);
+            break;
+        
+        case 0x80:
+            NOP(std::bind(&CPU6502::immediate, this));
+            break;
+            
+        case 0x1C:
+        case 0x3C:
+        case 0x5C:
+        case 0x7C:
+        case 0xDC:
+        case 0xFC:
+            NOP(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //LAX
+        case 0xA3:
+            LAX(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0xA7:
+            LAX(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0xAF:
+            LAX(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0xB3:
+            LAX(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0xB7:
+            LAX(std::bind(&CPU6502::zeroPageY, this));
+            break;
+            
+        case 0xBF:
+            LAX(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        //SAX
+        case 0x83:
+            SAX(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0x87:
+            SAX(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x8F:
+            SAX(std::bind(&CPU6502::absolute, this));
+            break;
+    
+        case 0x97:
+            SAX(std::bind(&CPU6502::zeroPageY, this));
+            break;
+        
+        //DCP
+        case 0xC3:
+            DCP(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0xC7:
+            DCP(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0xCF:
+            DCP(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0xD3:
+            DCP(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0xD7:
+            DCP(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0xDB:
+            DCP(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0xDF:
+            DCP(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //ISB
+        case 0xE3:
+            ISB(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0xE7:
+            ISB(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0xEF:
+            ISB(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0xF3:
+            ISB(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0xF7:
+            ISB(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0xFB:
+            ISB(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0xFF:
+            ISB(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //SLO
+        case 0x03:
+            SLO(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0x07:
+            SLO(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x0F:
+            SLO(std::bind(&CPU6502::absolute, this));
+            break;
+        
+        case 0x13:
+            SLO(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0x17:
+            SLO(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0x1B:
+            SLO(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0x1F:
+            SLO(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //RLA
+        case 0x23:
+            RLA(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0x27:
+            RLA(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x2F:
+            RLA(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0x33:
+            RLA(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0x37:
+            RLA(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0x3B:
+            RLA(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0x3F:
+            RLA(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //SRE
+        case 0x43:
+            SRE(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0x47:
+            SRE(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x4F:
+            SRE(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0x53:
+            SRE(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0x57:
+            SRE(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0x5B:
+            SRE(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0x5F:
+            SRE(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
+        //RRA
+        case 0x63:
+            RRA(std::bind(&CPU6502::indirectX, this));
+            break;
+            
+        case 0x67:
+            RRA(std::bind(&CPU6502::zeroPage, this));
+            break;
+            
+        case 0x6F:
+            RRA(std::bind(&CPU6502::absolute, this));
+            break;
+            
+        case 0x73:
+            RRA(std::bind(&CPU6502::indirectY, this));
+            break;
+            
+        case 0x77:
+            RRA(std::bind(&CPU6502::zeroPageX, this));
+            break;
+            
+        case 0x7B:
+            RRA(std::bind(&CPU6502::absoluteY, this));
+            break;
+            
+        case 0x7F:
+            RRA(std::bind(&CPU6502::absoluteX, this));
+            break;
+            
         default:
             std::cout << "Unkown instruction " << instruction;
             programCounter++;
@@ -748,9 +993,9 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
     
     if (address >= 0 && address < 8192) {
         if (mode == MemoryAccessMode::READ) {
-            readData = ram->read(address);
+            readData = ram.read(address);
         } else {
-            ram->write(address, data);
+            ram.write(address, data);
         }
     } else if (address >= 8192 && address < 16384) {
         if (mode == MemoryAccessMode::READ) {
@@ -832,7 +1077,10 @@ uint8_t CPU6502::popStack() {
 }
 
 void CPU6502::ADC(std::function<uint16_t()> addressing) {
-    uint8_t data = *read(addressing());
+    ADC(*read(addressing()));
+}
+
+void CPU6502::ADC(uint8_t data) {
     uint8_t carry = statusRegister & 1;
     uint16_t sum = data + accumulator + carry;
     //if( (A ^ s) & (v ^ s) & 0x80 )
@@ -845,15 +1093,19 @@ void CPU6502::ADC(std::function<uint16_t()> addressing) {
         setCarry(0);
     }
     
-    setNegative(sum > 127);
+    setNegative(sum & 0x80);
     setZero(sum == 0);
     setOverflow(overflow);
     accumulator = sum;
 }
 
 void CPU6502::AND(std::function<uint16_t()> addressing) {
-    accumulator &= *read(addressing());
-    setNegative(accumulator > 127);
+    AND(*read(addressing()));
+}
+
+void CPU6502::AND(uint8_t data) {
+    accumulator &= data;
+    setNegative(accumulator & 0x80);
     setZero(accumulator == 0);
 }
 
@@ -866,10 +1118,16 @@ void CPU6502::ASL(std::function<uint16_t()> addressing) {
         data = read(addressing());
     }
     
+    ASL_val(data);
+}
+
+//when called with nullptr compiler didn't know which overload to call.
+//better fix would be to implement accumulator_adr func.
+void CPU6502::ASL_val(uint8_t* data) {
     uint8_t bit7 = (*data >> 7) & 1;
     *data <<= 1;
     setCarry(bit7);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
     setZero(*data == 0);
 }
 
@@ -994,11 +1252,14 @@ void CPU6502::CLV() {
 }
 
 void CPU6502::CMP(std::function<uint16_t()> addressing) {
-    uint8_t data = *read(addressing());
+    CMP(*read(addressing()));
+}
+
+void CPU6502::CMP(uint8_t data) {
     uint8_t cmp = accumulator - data;
     setCarry(accumulator >= data);
     setZero(accumulator == data);
-    setNegative(cmp > 127);
+    setNegative(cmp & 0x80);
 }
 
 void CPU6502::CPX(std::function<uint16_t()> addressing) {
@@ -1006,7 +1267,7 @@ void CPU6502::CPX(std::function<uint16_t()> addressing) {
     uint8_t cmp = xRegister - data;
     setCarry(xRegister >= data);
     setZero(xRegister == data);
-    setNegative(cmp > 127);
+    setNegative(cmp & 0x80);
 }
 
 void CPU6502::CPY(std::function<uint16_t()> addressing) {
@@ -1014,51 +1275,62 @@ void CPU6502::CPY(std::function<uint16_t()> addressing) {
     uint8_t cmp = yRegister - data;
     setCarry(yRegister >= data);
     setZero(yRegister == data);
-    setNegative(cmp > 127);
+    setNegative(cmp & 0x80);
 }
 
 void CPU6502::DEC(std::function<uint16_t()> addressing) {
-    uint8_t* data = read(addressing());
+    DEC(read(addressing()));
+    
+}
+
+void CPU6502::DEC(uint8_t* data) {
     (*data)--;
     setZero(*data == 0);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
 }
 
 void CPU6502::DEX() {
     xRegister--;
     setZero(xRegister == 0);
-    setNegative(xRegister > 127);
+    setNegative(xRegister & 0x80);
 }
 
 void CPU6502::DEY() {
     yRegister--;
     setZero(yRegister == 0);
-    setNegative(yRegister > 127);
+    setNegative(yRegister & 0x80);
 }
 
 void CPU6502::EOR(std::function<uint16_t()> addressing) {
-    accumulator ^= *read(addressing());
+    EOR(*read(addressing()));
+}
+
+void CPU6502::EOR(uint8_t data) {
+    accumulator ^= data;
     setZero(accumulator == 0);
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
 }
 
 void CPU6502::INC(std::function<uint16_t()> addressing) {
-    uint8_t* data = read(addressing());
+    INC(read(addressing()));
+}
+
+void CPU6502::INC(uint8_t* data) {
     *data = *data + 1;
     setZero(*data == 0);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
 }
 
 void CPU6502::INX() {
     xRegister++;
     setZero(xRegister == 0);
-    setNegative(xRegister > 127);
+    setNegative(xRegister & 0x80);
 }
 
 void CPU6502::INY() {
     yRegister++;
     setZero(yRegister == 0);
-    setNegative(yRegister > 127);
+    setNegative(yRegister & 0x80);
 }
 
 void CPU6502::JMP(std::function<uint16_t()> addressing) {
@@ -1086,21 +1358,29 @@ void CPU6502::JSR(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::LDA(std::function<uint16_t()> addressing) {
-    accumulator = *read(addressing());
+    LDA(*read(addressing()));
+}
+
+void CPU6502::LDA(uint8_t data) {
+    accumulator = data;
     setZero(accumulator == 0);
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
+}
+
+void CPU6502::LDX(uint8_t data) {
+    xRegister = data;
+    setZero(xRegister == 0);
+    setNegative(xRegister & 0x80);
 }
 
 void CPU6502::LDX(std::function<uint16_t()> addressing) {
-    xRegister = *read(addressing());
-    setZero(xRegister == 0);
-    setNegative(xRegister > 127);
+    LDX(*read(addressing()));
 }
 
 void CPU6502::LDY(std::function<uint16_t()> addressing) {
     yRegister = *read(addressing());
     setZero(yRegister == 0);
-    setNegative(yRegister > 127);
+    setNegative(yRegister & 0x80);
 }
 
 void CPU6502::LSR(std::function<uint16_t()> addressing) {
@@ -1112,22 +1392,33 @@ void CPU6502::LSR(std::function<uint16_t()> addressing) {
         data = read(addressing());
     }
     
+    LSR_val(data);
+}
+
+void CPU6502::LSR_val(uint8_t* data) {
     uint8_t bit0 = *data & 1;
     *data >>= 1;
     setCarry(bit0);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
     setZero(*data == 0);
 }
 
-void CPU6502::NOP() {
-    //No operation
+
+void CPU6502::NOP(std::function<uint16_t()> addressing) {
+    //Unofficial ones have addressing modes.
+    if (addressing != nullptr) {
+        addressing();
+    }
 }
 
 void CPU6502::ORA(std::function<uint16_t()> addressing) {
-    uint8_t data = *read(addressing());
+    ORA(*read(addressing()));
+}
+
+void CPU6502::ORA(uint8_t data) {
     accumulator |= data;
     setZero(accumulator == 0);
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
 }
 
 void CPU6502::PHA() {
@@ -1143,7 +1434,7 @@ void CPU6502::PHP() {
 
 void CPU6502::PLA() {
     accumulator = popStack();
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
     setZero(accumulator == 0);
 }
 
@@ -1162,13 +1453,17 @@ void CPU6502::ROL(std::function<uint16_t()> addressing) {
         data = read(addressing());
     }
     
+    ROL_val(data);
+}
+
+void CPU6502::ROL_val(uint8_t* data) {
     uint8_t carry = statusRegister & 1;
     uint8_t bit7 = (*data >> 7) & 1;
     *data <<= 1;
     *data |= carry;
     setCarry(bit7);
     setZero(*data == 0);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
 }
 
 void CPU6502::ROR(std::function<uint16_t()> addressing) {
@@ -1180,13 +1475,17 @@ void CPU6502::ROR(std::function<uint16_t()> addressing) {
         data = read(addressing());
     }
     
+    ROR_val(data);
+}
+
+void CPU6502::ROR_val(uint8_t* data) {
     uint8_t carry = statusRegister & 1;
     uint8_t bit0 = *data & 1;
     *data >>= 1;
     *data |= carry << 7;
     setCarry(bit0);
     setZero(*data == 0);
-    setNegative(*data > 127);
+    setNegative(*data & 0x80);
 }
 
 void CPU6502::RTI() {
@@ -1205,13 +1504,16 @@ void CPU6502::RTS() {
 }
 
 void CPU6502::SBC(std::function<uint16_t()> addressing) {
-    uint8_t data = *read(addressing());
+    SBC(*read(addressing()));
+}
+
+void CPU6502::SBC(uint8_t data) {
     uint8_t carry = statusRegister & 1;
     uint16_t result = accumulator - data - !carry;
     uint8_t overflow = (accumulator ^ result) & (~(data ^ result)) & 0x80;
     setZero(result == 0);
     setOverflow(overflow);
-    setNegative(result > 127);
+    setNegative(result & 0x80);
     setCarry(!(result & 0x100));
     accumulator = result;
 }
@@ -1243,25 +1545,25 @@ void CPU6502::STY(std::function<uint16_t()> addressing) {
 void CPU6502::TAX() {
     xRegister = accumulator;
     setZero(xRegister == 0);
-    setNegative(xRegister > 127);
+    setNegative(xRegister & 0x80);
 }
 
 void CPU6502::TAY() {
     yRegister = accumulator;
     setZero(yRegister == 0);
-    setNegative(yRegister > 127);
+    setNegative(yRegister & 0x80);
 }
 
 void CPU6502::TSX() {
     xRegister = stackPointer;
     setZero(xRegister == 0);
-    setNegative(xRegister > 127);
+    setNegative(xRegister & 0x80);
 }
 
 void CPU6502::TXA() {
     accumulator = xRegister;
     setZero(accumulator == 0);
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
 }
 
 void CPU6502::TXS() {
@@ -1271,5 +1573,61 @@ void CPU6502::TXS() {
 void CPU6502::TYA() {
     accumulator = yRegister;
     setZero(accumulator == 0);
-    setNegative(accumulator > 127);
+    setNegative(accumulator & 0x80);
 }
+
+//UNOFFICIAL OPCODES
+//LDA+LDX
+void CPU6502::LAX(std::function<uint16_t()> addressing) {
+    uint8_t data = *read(addressing());
+    LDA(data);
+    LDX(data);
+}
+
+//STA+acc&x
+void CPU6502::SAX(std::function<uint16_t()> addressing) {
+    write(addressing(), accumulator & xRegister);
+}
+
+//DEC+CMP
+void CPU6502::DCP(std::function<uint16_t()> addressing) {
+    uint8_t *data = read(addressing());
+    DEC(data);
+    CMP(*data);
+}
+
+//INC+SBC
+void CPU6502::ISB(std::function<uint16_t()> addressing) {
+    uint8_t* data = read(addressing());
+    INC(data);
+    SBC(*data);
+}
+
+//ASL+ORA
+void CPU6502::SLO(std::function<uint16_t()> addressing) {
+    uint8_t* data = read(addressing());
+    ASL_val(data);
+    ORA(*data);
+}
+
+//ROL+AND
+void CPU6502::RLA(std::function<uint16_t()> addressing) {
+    uint8_t* data = read(addressing());
+    ROL_val(data);
+    AND(*data);
+}
+
+//LSR+EOR
+void CPU6502::SRE(std::function<uint16_t()> addressing) {
+    uint8_t* data = read(addressing());
+    LSR_val(data);
+    EOR(*data);
+}
+
+//ROR+ADC
+void CPU6502::RRA(std::function<uint16_t()> addressing) {
+    uint8_t* data = read(addressing());
+    ROR_val(data);
+    ADC(*data);
+}
+
