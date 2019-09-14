@@ -12,10 +12,18 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "INESBus.hpp"
-#include "RAM.hpp"
+#include "ROM.hpp"
+
+struct OAM {
+    uint8_t spriteY;
+    uint8_t spriteTileNum;
+    uint8_t spriteAttr;
+    uint8_t spriteX;
+};
 
 class PPU : public INESBus {
 private:
+    //Registers
     uint8_t ppuctrl; //$2000
     uint8_t ppumask; //$2001
     uint8_t ppustatus; //$2002
@@ -25,9 +33,18 @@ private:
     uint8_t ppuaddr; //$2006
     uint8_t ppudata; //$2007
     uint8_t oamdma; //$4014
-    RAM vram;
-
+    
+    //Nametable vram
+    uint8_t vram[2048];
+    
+    //Object Attribute Memory
+    OAM oam[64];
+    
+    ROM* rom;
+    
 public:
+    PPU(ROM* rom) : rom(rom) { }
+    void drawPatternTable();
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
 };

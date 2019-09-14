@@ -330,7 +330,7 @@ public:
     uint8_t* memoryAccess(MemoryAccessMode, uint16_t, uint8_t);
     uint8_t* read(uint16_t);
     void write(uint16_t, uint8_t);
-    void run(int);
+    void run();
     void step();
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();

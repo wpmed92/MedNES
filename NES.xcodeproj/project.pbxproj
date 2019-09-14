@@ -13,6 +13,8 @@
 		80CD8C0D2062F62E007DF492 /* ROM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0B2062F62E007DF492 /* ROM.cpp */; };
 		80CD8C102062F640007DF492 /* PPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0E2062F640007DF492 /* PPU.cpp */; };
 		CE2C8BF82322837F00643BF4 /* CPUTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE2C8BF62322837F00643BF4 /* CPUTest.cpp */; };
+		CEA2D1F2232D820800EE1064 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEA2D1F1232D820800EE1064 /* OpenGL.framework */; };
+		CEA2D1F4232D821100EE1064 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEA2D1F3232D821100EE1064 /* GLUT.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,6 +43,8 @@
 		80CD8C0F2062F640007DF492 /* PPU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PPU.hpp; sourceTree = "<group>"; };
 		CE2C8BF62322837F00643BF4 /* CPUTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CPUTest.cpp; path = test/CPUTest.cpp; sourceTree = SOURCE_ROOT; };
 		CE2C8BF72322837F00643BF4 /* CPUTest.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CPUTest.hpp; path = test/CPUTest.hpp; sourceTree = SOURCE_ROOT; };
+		CEA2D1F1232D820800EE1064 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		CEA2D1F3232D821100EE1064 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +52,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CEA2D1F4232D821100EE1064 /* GLUT.framework in Frameworks */,
+				CEA2D1F2232D820800EE1064 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +65,7 @@
 			children = (
 				805B6F692055C7A900B79546 /* NES */,
 				805B6F682055C7A900B79546 /* Products */,
+				CEA2D1F0232D820800EE1064 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -87,6 +94,15 @@
 				CE2C8BF72322837F00643BF4 /* CPUTest.hpp */,
 			);
 			path = NES;
+			sourceTree = "<group>";
+		};
+		CEA2D1F0232D820800EE1064 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CEA2D1F3232D821100EE1064 /* GLUT.framework */,
+				CEA2D1F1232D820800EE1064 /* OpenGL.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

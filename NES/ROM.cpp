@@ -36,6 +36,7 @@ void ROM::open(std::string filePath ) {
     }
     
     in.read((char *)prgCode.data(), header.prgIn16kb * 16384);
+    in.read((char *)chrData.data(), header.chrIn8kb * 8192);
 }
 
 void ROM::printHeader() {
@@ -54,7 +55,7 @@ void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
 }
 
 uint8_t* ROM::read(uint16_t address) {
-    address = (address - 0x8000) % 16384;
+    address = (address - 0x8000) % prgCode.size();
     return &prgCode[address];
 }
 

@@ -9,15 +9,11 @@
 #include "6502.hpp"
 #include <assert.h>
 
-void CPU6502::run(int stepCount) {
+void CPU6502::run() {
     reset();
-    int stepCounter = 0;
     
-    //TEST output should be something like this
-    //C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0,  0 CYC:7
-    while (stepCounter != stepCount) {
+    while (true) {
         step();
-        stepCounter++;
     }
 }
 
@@ -991,21 +987,21 @@ void CPU6502::executeInstruction(uint8_t instruction) {
 uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t data) {
     uint8_t* readData = nullptr;
     
-    if (address >= 0 && address < 8192) {
+    if (address >= 0 && address < 0x2000) {
         if (mode == MemoryAccessMode::READ) {
             readData = ram.read(address);
         } else {
             ram.write(address, data);
         }
-    } else if (address >= 8192 && address < 16384) {
+    } else if (address >= 0x2000 && address < 0x4000) {
         if (mode == MemoryAccessMode::READ) {
             readData = ppu->read(address);
         } else {
             ppu->write(address, data);
         }
-    } else if (address >= 16384 && address < 16408) {
+    } else if (address >= 0x4000 && address < 0x4018) {
         //APU I/O registers
-    } else if (address >= 16408 && address < 16416) {
+    } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
     } else if (address >= 0x8000 && address < 0xFFFF) {
         readData = rom->read(address);
