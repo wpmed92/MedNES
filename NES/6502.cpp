@@ -1083,20 +1083,12 @@ void CPU6502::ADC(std::function<uint16_t()> addressing) {
 void CPU6502::ADC(uint8_t data) {
     uint8_t carry = statusRegister & 1;
     uint16_t sum = data + accumulator + carry;
-    //if( (A ^ s) & (v ^ s) & 0x80 )
-    bool overflow = (accumulator ^ sum) & (data ^ sum) & 0x80;
-    
-    if (sum - 256 >= 0) {
-        sum -= 256;
-        setCarry(1);
-    } else {
-        setCarry(0);
-    }
-    
-    setNegative(sum & 0x80);
-    setZero(sum == 0);
-    setOverflow(overflow);
+    uint8_t overflow = (accumulator ^ sum) & (data ^ sum) & 0x80;
+    setCarry(sum > 0xFF);
     accumulator = sum;
+    setNegative(accumulator & 0x80);
+    setZero(accumulator == 0);
+    setOverflow(overflow);
 }
 
 void CPU6502::AND(std::function<uint16_t()> addressing) {
@@ -1508,14 +1500,7 @@ void CPU6502::SBC(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::SBC(uint8_t data) {
-    uint8_t carry = statusRegister & 1;
-    uint16_t result = accumulator - data - !carry;
-    uint8_t overflow = (accumulator ^ result) & (~(data ^ result)) & 0x80;
-    setZero(result == 0);
-    setOverflow(overflow);
-    setNegative(result & 0x80);
-    setCarry(!(result & 0x100));
-    accumulator = result;
+    ADC(data ^ 0xFF);
 }
 
 void CPU6502::SEC() {
@@ -1630,4 +1615,3 @@ void CPU6502::RRA(std::function<uint16_t()> addressing) {
     ROR_val(data);
     ADC(*data);
 }
-

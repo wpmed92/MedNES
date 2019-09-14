@@ -334,7 +334,6 @@ public:
     void step();
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();
-    void setExecutionState(ExecutionState*);
 };
 
 #endif /* _502_hpp */

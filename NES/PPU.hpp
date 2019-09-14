@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "INESBus.hpp"
+#include "RAM.hpp"
 
 class PPU : public INESBus {
 private:
@@ -24,7 +25,7 @@ private:
     uint8_t ppuaddr; //$2006
     uint8_t ppudata; //$2007
     uint8_t oamdma; //$4014
-    void router(uint16_t address);
+    RAM vram;
 
 public:
     uint8_t* read(uint16_t address);

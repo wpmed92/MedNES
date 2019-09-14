@@ -25,31 +25,26 @@ ExecutionState* CPUTest::parseExecutionStateFromLogLine(std::string line) {
     lexerStream.str("");
     
     //accumulator
-    p = nullptr;
     lexerStream << line[50] << line[51];
     expectedState->accumulator = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);
     lexerStream.str("");
     
     //xregister
-    p = nullptr;
     lexerStream << line[55] << line[56];
     expectedState->xRegister = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);;
     lexerStream.str("");
     
     //yregister
-    p = nullptr;
     lexerStream << line[60] << line[61];
     expectedState->yRegister = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);;
     lexerStream.str("");
     
     //statusregister
-    p = nullptr;
     lexerStream << line[65] << line[66];
     expectedState->statusRegister = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);
     lexerStream.str("");
     
     //stackpointer
-    p = nullptr;
     lexerStream << line[71] << line[72];
     expectedState->stackPointer = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);;
     lexerStream.str("");
