@@ -37,6 +37,7 @@ private:
     std::vector<uint8_t> chrData;
     
 public:
+    std::vector<uint8_t> getChrData() { return chrData; };
     void open(std::string);
     void printHeader();
     void loadTestProgramcode(std::vector<uint8_t>);

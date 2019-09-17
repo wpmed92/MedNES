@@ -151,831 +151,282 @@ uint16_t CPU6502::relative() {
 
 void CPU6502::executeInstruction(uint8_t instruction) {
     switch (instruction) {
-        //ADC
-        case 0x69:
-            ADC(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0x65:
-            ADC(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x75:
-            ADC(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x6D:
-            ADC(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x7D:
-            ADC(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0x79:
-            ADC(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0x61:
-            ADC(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0x71:
-            ADC(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0x69: ADC(std::bind(&CPU6502::immediate, this)); break;
+        case 0x65: ADC(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x75: ADC(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x6D: ADC(std::bind(&CPU6502::absolute, this)); break;
+        case 0x7D: ADC(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0x79: ADC(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x61: ADC(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x71: ADC(std::bind(&CPU6502::indirectY, this)); break;
             
-        //AND
-        case 0x29:
-            AND(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0x25:
-            AND(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x35:
-            AND(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x2D:
-            AND(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x3D:
-            AND(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0x39:
-            AND(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0x21:
-            AND(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0x31:
-            AND(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0x29: AND(std::bind(&CPU6502::immediate, this)); break;
+        case 0x25: AND(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x35: AND(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x2D: AND(std::bind(&CPU6502::absolute, this)); break;
+        case 0x3D: AND(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0x39: AND(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x21: AND(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x31: AND(std::bind(&CPU6502::indirectY, this)); break;
             
-        //ASL
-        case 0x0A:
-            ASL(nullptr);
-            break;
-        case 0x06:
-            ASL(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x16:
-            ASL(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x0E:
-            ASL(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x1E:
-            ASL(std::bind(&CPU6502::absoluteX, this));
-            break;
+        case 0x0A: ASL(nullptr); break;
+        case 0x06: ASL(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x16: ASL(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x0E: ASL(std::bind(&CPU6502::absolute, this)); break;
+        case 0x1E: ASL(std::bind(&CPU6502::absoluteX, this));  break;
             
         //START BRANCH INSTRUCTIONS, ALL RELATIVE!
-        //BCC
-        case 0x90:
-            BCC(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BCS
-        case 0xB0:
-            BCS(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BEQ
-        case 0xF0:
-            BEQ(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BMI
-        case 0x30:
-            BMI(std::bind(&CPU6502::relative, this));
-            break;
-        
-        //BNE
-        case 0xD0:
-            BNE(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BPL
-        case 0x10:
-            BPL(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BVC
-        case 0x50:
-            BVC(std::bind(&CPU6502::relative, this));
-            break;
-            
-        //BVS
-        case 0x70:
-            BVS(std::bind(&CPU6502::relative, this));
-            break;
+        case 0x90: BCC(std::bind(&CPU6502::relative, this)); break;
+        case 0xB0: BCS(std::bind(&CPU6502::relative, this)); break;
+        case 0xF0: BEQ(std::bind(&CPU6502::relative, this)); break;
+        case 0x30: BMI(std::bind(&CPU6502::relative, this)); break;
+        case 0xD0: BNE(std::bind(&CPU6502::relative, this)); break;
+        case 0x10: BPL(std::bind(&CPU6502::relative, this)); break;
+        case 0x50: BVC(std::bind(&CPU6502::relative, this)); break;
+        case 0x70: BVS(std::bind(&CPU6502::relative, this)); break;
         //END BRANCH INSTRUCTION
         
-        //BIT
-        case 0x24:
-            BIT(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x2C:
-            BIT(std::bind(&CPU6502::absolute, this));
-            break;
+        case 0x24: BIT(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x2C: BIT(std::bind(&CPU6502::absolute, this)); break;
             
-        //BRK - Force interupt
-        case 0x00:
-            BRK();
-            break;
+        case 0x00: BRK(); break;
             
-        //CLC
-        case 0x18:
-            CLC();
-            break;
+        case 0x18: CLC(); break;
+        case 0xD8: CLD(); break;
+        case 0x58: CLI(); break;
+        case 0xB8: CLV(); break;
             
-        //CLD
-        case 0xD8:
-            CLD();
-            break;
+        case 0xC9: CMP(std::bind(&CPU6502::immediate, this)); break;
+        case 0xC5: CMP(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xD5: CMP(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xCD: CMP(std::bind(&CPU6502::absolute, this)); break;
+        case 0xDD: CMP(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0xD9: CMP(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0xC1: CMP(std::bind(&CPU6502::indirectX, this)); break;
+        case 0xD1: CMP(std::bind(&CPU6502::indirectY, this)); break;
         
-        //CLI
-        case 0x58:
-            CLI();
-            break;
+        case 0xE0: CPX(std::bind(&CPU6502::immediate, this)); break;
+        case 0xE4: CPX(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xEC: CPX(std::bind(&CPU6502::absolute, this)); break;
+           
+        case 0xC0: CPY(std::bind(&CPU6502::immediate, this)); break;
+        case 0xC4: CPY(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xCC: CPY(std::bind(&CPU6502::absolute, this)); break;
             
-        //CLV
-        case 0xB8:
-            CLV();
-            break;
+        case 0xC6: DEC(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xD6: DEC(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xCE: DEC(std::bind(&CPU6502::absolute, this)); break;
+        case 0xDE: DEC(std::bind(&CPU6502::absoluteX, this)); break;
             
-        //CMP
-        case 0xC9:
-            CMP(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xC5:
-            CMP(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xD5:
-            CMP(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xCD:
-            CMP(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xDD:
-            CMP(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0xD9:
-            CMP(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0xC1:
-            CMP(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0xD1:
-            CMP(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0xCA: DEX(); break;
+        case 0x88: DEY(); break;
+            
+        case 0x49: EOR(std::bind(&CPU6502::immediate, this)); break;
+        case 0x45: EOR(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x55: EOR(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x4D: EOR(std::bind(&CPU6502::absolute, this)); break;
+        case 0x5D: EOR(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0x59: EOR(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x41: EOR(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x51: EOR(std::bind(&CPU6502::indirectY, this)); break;
+            
+        case 0xE6: INC(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xF6: INC(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xEE: INC(std::bind(&CPU6502::absolute, this)); break;
+        case 0xFE: INC(std::bind(&CPU6502::absoluteX, this)); break;
+            
+        case 0xE8: INX(); break;
+        case 0xC8: INY(); break;
+            
+        case 0x4C: JMP(std::bind(&CPU6502::absolute, this)); break;
+        case 0x6C: JMP(nullptr); break;
+            
+        case 0x20: JSR(std::bind(&CPU6502::absolute, this)); break;
+            
+        case 0xA9: LDA(std::bind(&CPU6502::immediate, this)); break;
+        case 0xA5: LDA(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xB5: LDA(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xAD: LDA(std::bind(&CPU6502::absolute, this)); break;
+        case 0xBD: LDA(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0xB9: LDA(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0xA1: LDA(std::bind(&CPU6502::indirectX, this)); break;
+        case 0xB1: LDA(std::bind(&CPU6502::indirectY, this)); break;
+            
+        case 0xA2: LDX(std::bind(&CPU6502::immediate, this)); break;
+        case 0xA6: LDX(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xB6: LDX(std::bind(&CPU6502::zeroPageY, this)); break;
+        case 0xAE: LDX(std::bind(&CPU6502::absolute, this)); break;
+        case 0xBE: LDX(std::bind(&CPU6502::absoluteY, this)); break;
+            
+        case 0xA0: LDY(std::bind(&CPU6502::immediate, this)); break;
+        case 0xA4: LDY(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xB4: LDY(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xAC: LDY(std::bind(&CPU6502::absolute, this)); break;
+        case 0xBC: LDY(std::bind(&CPU6502::absoluteX, this)); break;
         
-        //CPX
-        case 0xE0:
-            CPX(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xE4:
-            CPX(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xEC:
-            CPX(std::bind(&CPU6502::absolute, this));
-            break;
+        case 0x4A: LSR(nullptr); break;
+        case 0x46: LSR(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x56: LSR(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x4E: LSR(std::bind(&CPU6502::absolute, this)); break;
+        case 0x5E: LSR(std::bind(&CPU6502::absoluteX, this)); break;
             
-        //CPY
-        case 0xC0:
-            CPY(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xC4:
-            CPY(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xCC:
-            CPY(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        //DEC
-        case 0xC6:
-            DEC(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xD6:
-            DEC(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xCE:
-            DEC(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xDE:
-            DEC(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //DEX
-        case 0xCA:
-            DEX();
-            break;
-            
-        //DEY
-        case 0x88:
-            DEY();
-            break;
-            
-        //EOR
-        case 0x49:
-            EOR(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0x45:
-            EOR(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x55:
-            EOR(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x4D:
-            EOR(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x5D:
-            EOR(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0x59:
-            EOR(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0x41:
-            EOR(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0x51:
-            EOR(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        //INC
-        case 0xE6:
-            INC(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xF6:
-            INC(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xEE:
-            INC(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xFE:
-            INC(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //INX
-        case 0xE8:
-            INX();
-            break;
-            
-        //INY
-        case 0xC8:
-            INY();
-            break;
-            
-        //JMP
-        case 0x4C:
-            JMP(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x6C:
-            JMP(nullptr); //indirect
-            break;
-            
-        //JSR
-        case 0x20:
-            JSR(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        //LDA
-        case 0xA9:
-            LDA(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xA5:
-            LDA(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xB5:
-            LDA(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xAD:
-            LDA(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xBD:
-            LDA(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0xB9:
-            LDA(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0xA1:
-            LDA(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0xB1:
-            LDA(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        //LDX
-        case 0xA2:
-            LDX(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xA6:
-            LDX(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xB6:
-            LDX(std::bind(&CPU6502::zeroPageY, this));
-            break;
-        case 0xAE:
-            LDX(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xBE:
-            LDX(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        //LDY
-        case 0xA0:
-            LDY(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xA4:
-            LDY(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xB4:
-            LDY(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xAC:
-            LDY(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xBC:
-            LDY(std::bind(&CPU6502::absoluteX, this));
-            break;
+        case 0xEA: NOP(nullptr); break;
         
-        //LSR
-        case 0x4A:
-            LSR(nullptr);
-            break;
-        case 0x46:
-            LSR(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x56:
-            LSR(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x4E:
-            LSR(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x5E:
-            LSR(std::bind(&CPU6502::absoluteX, this));
-            break;
+        case 0x09: ORA(std::bind(&CPU6502::immediate, this)); break;
+        case 0x05: ORA(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x15: ORA(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x0D: ORA(std::bind(&CPU6502::absolute, this)); break;
+        case 0x1D: ORA(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0x19: ORA(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x01: ORA(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x11: ORA(std::bind(&CPU6502::indirectY, this)); break;
             
-        //NOP
-        case 0xEA:
-            NOP(nullptr);
-            break;
-        
-        //ORA
-        case 0x09:
-            ORA(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0x05:
-            ORA(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x15:
-            ORA(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x0D:
-            ORA(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x1D:
-            ORA(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0x19:
-            ORA(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0x01:
-            ORA(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0x11:
-            ORA(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0x48: PHA(); break;
+        case 0x08: PHP(); break;
+        case 0x68: PLA(); break;
+        case 0x28: PLP(); break;
             
-        //PHA
-        case 0x48:
-            PHA();
-            break;
+        case 0x2A: ROL(nullptr); break;
+        case 0x26: ROL(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x36: ROL(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x2E: ROL(std::bind(&CPU6502::absolute, this)); break;
+        case 0x3E: ROL(std::bind(&CPU6502::absoluteX, this)); break;
             
-        //PHP
-        case 0x08:
-            PHP();
-            break;
+        case 0x6A: ROR(nullptr); break;
+        case 0x66: ROR(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x76: ROR(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x6E: ROR(std::bind(&CPU6502::absolute, this)); break;
+        case 0x7E: ROR(std::bind(&CPU6502::absoluteX, this)); break;
             
-        //PLA
-        case 0x68:
-            PLA();
-            break;
+        case 0x40: RTI(); break;
+        case 0x60: RTS(); break;
             
-        //PLP
-        case 0x28:
-            PLP();
-            break;
-            
-        //ROL
-        case 0x2A:
-            ROL(nullptr);
-            break;
-        case 0x26:
-            ROL(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x36:
-            ROL(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x2E:
-            ROL(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x3E:
-            ROL(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //ROR
-        case 0x6A:
-            ROR(nullptr);
-            break;
-        case 0x66:
-            ROR(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x76:
-            ROR(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x6E:
-            ROR(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x7E:
-            ROR(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //RTI
-        case 0x40:
-            RTI();
-            break;
-            
-        //RTS
-        case 0x60:
-            RTS();
-            break;
-            
-        //SBC
         case 0xE9:
-        case 0xEB:
-            SBC(std::bind(&CPU6502::immediate, this));
-            break;
-        case 0xE5:
-            SBC(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0xF5:
-            SBC(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0xED:
-            SBC(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0xFD:
-            SBC(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0xF9:
-            SBC(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0xE1:
-            SBC(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0xF1:
-            SBC(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0xEB: SBC(std::bind(&CPU6502::immediate, this)); break;
+        case 0xE5: SBC(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xF5: SBC(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xED: SBC(std::bind(&CPU6502::absolute, this)); break;
+        case 0xFD: SBC(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0xF9: SBC(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0xE1: SBC(std::bind(&CPU6502::indirectX, this)); break;
+        case 0xF1: SBC(std::bind(&CPU6502::indirectY, this)); break;
             
-        //SEC
-        case 0x38:
-            SEC();
-            break;
+        case 0x38: SEC(); break;
+        case 0xF8: SED(); break;
+        case 0x78: SEI(); break;
             
-        //SED
-        case 0xF8:
-            SED();
-            break;
+        case 0x85: STA(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x95: STA(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x8D: STA(std::bind(&CPU6502::absolute, this)); break;
+        case 0x9D: STA(std::bind(&CPU6502::absoluteX, this)); break;
+        case 0x99: STA(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x81: STA(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x91: STA(std::bind(&CPU6502::indirectY, this)); break;
             
-        //SEI
-        case 0x78:
-            SEI();
-            break;
+        case 0x86: STX(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x96: STX(std::bind(&CPU6502::zeroPageY, this)); break;
+        case 0x8E: STX(std::bind(&CPU6502::absolute, this)); break;
             
-        //STA
-        case 0x85:
-            STA(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x95:
-            STA(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x8D:
-            STA(std::bind(&CPU6502::absolute, this));
-            break;
-        case 0x9D:
-            STA(std::bind(&CPU6502::absoluteX, this));
-            break;
-        case 0x99:
-            STA(std::bind(&CPU6502::absoluteY, this));
-            break;
-        case 0x81:
-            STA(std::bind(&CPU6502::indirectX, this));
-            break;
-        case 0x91:
-            STA(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0x84: STY(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x94: STY(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x8C: STY(std::bind(&CPU6502::absolute, this)); break;
             
-        //STX
-        case 0x86:
-            STX(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x96:
-            STX(std::bind(&CPU6502::zeroPageY, this));
-            break;
-        case 0x8E:
-            STX(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        //STY
-        case 0x84:
-            STY(std::bind(&CPU6502::zeroPage, this));
-            break;
-        case 0x94:
-            STY(std::bind(&CPU6502::zeroPageX, this));
-            break;
-        case 0x8C:
-            STY(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        //TAX
-        case 0xAA:
-            TAX();
-            break;
-            
-        //TAY
-        case 0xA8:
-            TAY();
-            break;
-            
-        //TSX
-        case 0xBA:
-            TSX();
-            break;
-            
-        //TXA
-        case 0x8A:
-            TXA();
-            break;
-            
-        //TXS
-        case 0x9A:
-            TXS();
-            break;
-            
-        //TYA
-        case 0x98:
-            TYA();
-            break;
+        case 0xAA: TAX(); break;
+        case 0xA8: TAY(); break;
+        case 0xBA: TSX(); break;
+        case 0x8A: TXA(); break;
+        case 0x9A: TXS(); break;
+        case 0x98: TYA(); break;
             
         //UNOFICIAL OPCODES
         case 0x04:
         case 0x44:
-        case 0x64:
-            NOP(std::bind(&CPU6502::zeroPage, this));
-            break;
+        case 0x64: NOP(std::bind(&CPU6502::zeroPage, this)); break;
             
-        case 0x0C:
-            NOP(std::bind(&CPU6502::absolute, this));
-            break;
+        case 0x0C: NOP(std::bind(&CPU6502::absolute, this)); break;
             
         case 0x14:
         case 0x34:
         case 0x54:
         case 0x74:
         case 0xD4:
-        case 0xF4:
-            NOP(std::bind(&CPU6502::zeroPageX, this));
-            break;
+        case 0xF4: NOP(std::bind(&CPU6502::zeroPageX, this));  break;
             
         case 0x1A:
         case 0x3A:
         case 0x5A:
         case 0x7A:
         case 0xDA:
-        case 0xFA:
-            NOP(nullptr);
-            break;
+        case 0xFA: NOP(nullptr); break;
         
-        case 0x80:
-            NOP(std::bind(&CPU6502::immediate, this));
-            break;
+        case 0x80: NOP(std::bind(&CPU6502::immediate, this)); break;
             
         case 0x1C:
         case 0x3C:
         case 0x5C:
         case 0x7C:
         case 0xDC:
-        case 0xFC:
-            NOP(std::bind(&CPU6502::absoluteX, this));
-            break;
+        case 0xFC: NOP(std::bind(&CPU6502::absoluteX, this)); break;
             
-        //LAX
-        case 0xA3:
-            LAX(std::bind(&CPU6502::indirectX, this));
-            break;
+        case 0xA3: LAX(std::bind(&CPU6502::indirectX, this)); break;
+        case 0xA7: LAX(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xAF: LAX(std::bind(&CPU6502::absolute, this)); break;
+        case 0xB3: LAX(std::bind(&CPU6502::indirectY, this)); break;
+        case 0xB7: LAX(std::bind(&CPU6502::zeroPageY, this)); break;
+        case 0xBF: LAX(std::bind(&CPU6502::absoluteY, this)); break;
             
-        case 0xA7:
-            LAX(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0xAF:
-            LAX(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        case 0xB3:
-            LAX(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0xB7:
-            LAX(std::bind(&CPU6502::zeroPageY, this));
-            break;
-            
-        case 0xBF:
-            LAX(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        //SAX
-        case 0x83:
-            SAX(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0x87:
-            SAX(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0x8F:
-            SAX(std::bind(&CPU6502::absolute, this));
-            break;
-    
-        case 0x97:
-            SAX(std::bind(&CPU6502::zeroPageY, this));
-            break;
+        case 0x83: SAX(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x87: SAX(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x8F: SAX(std::bind(&CPU6502::absolute, this)); break;
+        case 0x97: SAX(std::bind(&CPU6502::zeroPageY, this)); break;
         
-        //DCP
-        case 0xC3:
-            DCP(std::bind(&CPU6502::indirectX, this));
-            break;
+        case 0xC3: DCP(std::bind(&CPU6502::indirectX, this)); break;
+        case 0xC7: DCP(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xCF: DCP(std::bind(&CPU6502::absolute, this)); break;
+        case 0xD3: DCP(std::bind(&CPU6502::indirectY, this)); break;
+        case 0xD7: DCP(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xDB: DCP(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0xDF: DCP(std::bind(&CPU6502::absoluteX, this)); break;
             
-        case 0xC7:
-            DCP(std::bind(&CPU6502::zeroPage, this));
-            break;
+        case 0xE3: ISB(std::bind(&CPU6502::indirectX, this));  break;
+        case 0xE7: ISB(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0xEF: ISB(std::bind(&CPU6502::absolute, this)); break;
+        case 0xF3: ISB(std::bind(&CPU6502::indirectY, this)); break;
+        case 0xF7: ISB(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0xFB: ISB(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0xFF: ISB(std::bind(&CPU6502::absoluteX, this)); break;
             
-        case 0xCF:
-            DCP(std::bind(&CPU6502::absolute, this));
-            break;
+        case 0x03: SLO(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x07: SLO(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x0F: SLO(std::bind(&CPU6502::absolute, this)); break;
+        case 0x13: SLO(std::bind(&CPU6502::indirectY, this)); break;
+        case 0x17: SLO(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x1B: SLO(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x1F: SLO(std::bind(&CPU6502::absoluteX, this)); break;
             
-        case 0xD3:
-            DCP(std::bind(&CPU6502::indirectY, this));
-            break;
+        case 0x23: RLA(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x27: RLA(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x2F: RLA(std::bind(&CPU6502::absolute, this)); break;
+        case 0x33: RLA(std::bind(&CPU6502::indirectY, this)); break;
+        case 0x37: RLA(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x3B: RLA(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x3F: RLA(std::bind(&CPU6502::absoluteX, this)); break;
             
-        case 0xD7:
-            DCP(std::bind(&CPU6502::zeroPageX, this));
-            break;
+        case 0x43: SRE(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x47: SRE(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x4F: SRE(std::bind(&CPU6502::absolute, this)); break;
+        case 0x53: SRE(std::bind(&CPU6502::indirectY, this)); break;
+        case 0x57: SRE(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x5B: SRE(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x5F: SRE(std::bind(&CPU6502::absoluteX, this)); break;
             
-        case 0xDB:
-            DCP(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0xDF:
-            DCP(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //ISB
-        case 0xE3:
-            ISB(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0xE7:
-            ISB(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0xEF:
-            ISB(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        case 0xF3:
-            ISB(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0xF7:
-            ISB(std::bind(&CPU6502::zeroPageX, this));
-            break;
-            
-        case 0xFB:
-            ISB(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0xFF:
-            ISB(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //SLO
-        case 0x03:
-            SLO(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0x07:
-            SLO(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0x0F:
-            SLO(std::bind(&CPU6502::absolute, this));
-            break;
-        
-        case 0x13:
-            SLO(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0x17:
-            SLO(std::bind(&CPU6502::zeroPageX, this));
-            break;
-            
-        case 0x1B:
-            SLO(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0x1F:
-            SLO(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //RLA
-        case 0x23:
-            RLA(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0x27:
-            RLA(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0x2F:
-            RLA(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        case 0x33:
-            RLA(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0x37:
-            RLA(std::bind(&CPU6502::zeroPageX, this));
-            break;
-            
-        case 0x3B:
-            RLA(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0x3F:
-            RLA(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //SRE
-        case 0x43:
-            SRE(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0x47:
-            SRE(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0x4F:
-            SRE(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        case 0x53:
-            SRE(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0x57:
-            SRE(std::bind(&CPU6502::zeroPageX, this));
-            break;
-            
-        case 0x5B:
-            SRE(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0x5F:
-            SRE(std::bind(&CPU6502::absoluteX, this));
-            break;
-            
-        //RRA
-        case 0x63:
-            RRA(std::bind(&CPU6502::indirectX, this));
-            break;
-            
-        case 0x67:
-            RRA(std::bind(&CPU6502::zeroPage, this));
-            break;
-            
-        case 0x6F:
-            RRA(std::bind(&CPU6502::absolute, this));
-            break;
-            
-        case 0x73:
-            RRA(std::bind(&CPU6502::indirectY, this));
-            break;
-            
-        case 0x77:
-            RRA(std::bind(&CPU6502::zeroPageX, this));
-            break;
-            
-        case 0x7B:
-            RRA(std::bind(&CPU6502::absoluteY, this));
-            break;
-            
-        case 0x7F:
-            RRA(std::bind(&CPU6502::absoluteX, this));
-            break;
+        case 0x63: RRA(std::bind(&CPU6502::indirectX, this)); break;
+        case 0x67: RRA(std::bind(&CPU6502::zeroPage, this)); break;
+        case 0x6F: RRA(std::bind(&CPU6502::absolute, this)); break;
+        case 0x73: RRA(std::bind(&CPU6502::indirectY, this)); break;
+        case 0x77: RRA(std::bind(&CPU6502::zeroPageX, this)); break;
+        case 0x7B: RRA(std::bind(&CPU6502::absoluteY, this)); break;
+        case 0x7F: RRA(std::bind(&CPU6502::absoluteX, this)); break;
             
         default:
             std::cout << "Unkown instruction " << instruction;
@@ -1000,6 +451,18 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
             ppu->write(address, data);
         }
     } else if (address >= 0x4000 && address < 0x4018) {
+        //COPY OAM
+        if (address == 0x4014) {
+            if (mode == MemoryAccessMode::READ) {
+                std::cout << "No read access at 0x4014";
+            } else {
+                ppu->write(address, data);
+                
+                for (int i = 0; i < 0xFF; i++) {
+                    ppu->copyOAM(*read(data * 256 + i), i);
+                }
+            }
+        }
         //APU I/O registers
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode

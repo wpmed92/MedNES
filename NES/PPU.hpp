@@ -32,13 +32,16 @@ private:
     uint8_t ppuscroll; //$2005
     uint8_t ppuaddr; //$2006
     uint8_t ppudata; //$2007
-    uint8_t oamdma; //$4014
     
     //Nametable vram
     uint8_t vram[2048];
     
     //Object Attribute Memory
-    OAM oam[64];
+    uint8_t oamdma; //$4014
+    
+    OAM primaryOAM[64];
+    
+    OAM secondaryOAM[8];
     
     ROM* rom;
     
@@ -46,6 +49,7 @@ public:
     PPU(ROM* rom) : rom(rom) { }
     void drawPatternTable();
     uint8_t* read(uint16_t address);
+    void copyOAM(uint8_t, int);
     void write(uint16_t address, uint8_t data);
 };
 
