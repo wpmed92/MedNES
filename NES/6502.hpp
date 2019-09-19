@@ -1,11 +1,3 @@
-//
-//  6502.hpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 12..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #ifndef _502_hpp
 #define _502_hpp
 
@@ -25,6 +17,7 @@ struct ExecutionState {
     uint16_t programCounter;
     uint8_t stackPointer;
     uint8_t statusRegister;
+    int cycle;
 };
 
 class CPU6502 {
@@ -39,6 +32,8 @@ private:
     uint16_t programCounter = 0;
     uint8_t stackPointer = 0xFD;
     uint8_t statusRegister = 0x24;
+    
+    int cycle = 7;
     
     //Devices
     RAM ram;
@@ -86,6 +81,8 @@ private:
     
     inline void PRINT_LOG();
     
+    inline void tick();
+    
     //stack
     void pushStack(uint8_t);
     
@@ -102,13 +99,13 @@ private:
     
     uint16_t absolute();
     
-    uint16_t absoluteX();
+    uint16_t absoluteX(bool);
     
-    uint16_t absoluteY();
+    uint16_t absoluteY(bool);
     
     uint16_t indirectX();
     
-    uint16_t indirectY();
+    uint16_t indirectY(bool);
     
     uint16_t relative();
     
@@ -322,6 +319,12 @@ private:
     void RRA(std::function<uint16_t()>);
     
     void SRE(std::function<uint16_t()>);
+    
+    void commonBranchLogic(bool, std::function<uint16_t()>);
+    
+    void tickIfToNewPage(uint16_t, uint16_t);
+    
+    void tickIfToNewPageBranch(uint16_t);
     
 public:
     CPU6502(ROM* rom, PPU* ppu) : rom(rom), ppu(ppu) { };

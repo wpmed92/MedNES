@@ -8472,7 +8472,7 @@ FAE9  24 01     BIT $01 = FF                    A:A5 X:02 Y:01 P:E5 SP:F9 PPU: 4
 FAEB  18        CLC                             A:A5 X:02 Y:01 P:E5 SP:F9 PPU: 51,219 CYC:24917
 FAEC  A9 B2     LDA #$B2                        A:A5 X:02 Y:01 P:E4 SP:F9 PPU: 57,219 CYC:24919
 FAEE  60        RTS                             A:B2 X:02 Y:01 P:E4 SP:F9 PPU: 63,219 CYC:24921
-F55E  63 45    *RRA ($45,X) @ 47 = 0647 = A5    A:B2 X:02 Y:01 P:E4 SP:FB PPU: 81,219 CYC:24927
+F55E  63 45    *RRA ($45,X) @ 47 = 0647 = A5    A:B2 X:02 Y:01 P:E4 SP:FB PPU: 81,219 CYC:24927	
 F560  EA        NOP                             A:05 X:02 Y:01 P:25 SP:FB PPU:105,219 CYC:24935
 F561  EA        NOP                             A:05 X:02 Y:01 P:25 SP:FB PPU:111,219 CYC:24937
 F562  EA        NOP                             A:05 X:02 Y:01 P:25 SP:FB PPU:117,219 CYC:24939

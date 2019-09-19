@@ -1,11 +1,3 @@
-//
-//  RAM.cpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 12..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #include "RAM.hpp"
 
 uint8_t* RAM::read(uint16_t address) {

@@ -1,11 +1,3 @@
-//
-//  RAM.hpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 12..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #ifndef RAM_hpp
 #define RAM_hpp
 

@@ -1,11 +1,3 @@
-//
-//  PPU.hpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 21..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #ifndef PPU_hpp
 #define PPU_hpp
 
@@ -45,10 +37,15 @@ private:
     
     ROM* rom;
     
+    //Scanline
+    int dot = 0;
+    int scanLine = -1;
+    
 public:
     PPU(ROM* rom) : rom(rom) { }
     void drawPatternTable();
     uint8_t* read(uint16_t address);
+    void tick();
     void copyOAM(uint8_t, int);
     void write(uint16_t address, uint8_t data);
 };

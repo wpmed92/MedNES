@@ -1,11 +1,3 @@
-//
-//  INESBus.hpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 24..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #ifndef INESBus_hpp
 #define INESBus_hpp
 

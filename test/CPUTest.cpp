@@ -1,14 +1,7 @@
-//
-//  CPUTest.cpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2019. 09. 06..
-//  Copyright © 2019. Ahmed Harmouche. All rights reserved.
-//
-
 #include "CPUTest.hpp"
 #include <fstream>
 #include <iomanip>
+#include <chrono>
 
 //C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0,  0 CYC:7
 ExecutionState* CPUTest::parseExecutionStateFromLogLine(std::string line) {
@@ -49,13 +42,22 @@ ExecutionState* CPUTest::parseExecutionStateFromLogLine(std::string line) {
     expectedState->stackPointer = (uint8_t) strtol(lexerStream.str().c_str(), & p, 16);;
     lexerStream.str("");
     
+    //cycle
+    for (int i = 90; i < line.length(); i++) {
+        lexerStream << line[i];
+    }
+    
+    expectedState->cycle = (int) strtol(lexerStream.str().c_str(), & p, 10);;
+    lexerStream.str("");
+    
     return expectedState;
 }
 
 void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
     ROM rom;
     rom.open(testROMPath);
-    CPU6502 cpu = CPU6502(&rom, nullptr);
+    PPU ppu = PPU(&rom);
+    CPU6502 cpu = CPU6502(&rom, &ppu);
     cpu.setProgramCounter(0xC000);
     
     ExecutionState* expectedExecutionState;
@@ -66,6 +68,8 @@ void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
     logFile >> std::noskipws;
     
     if (logFile.is_open()) {
+        auto t1 = std::chrono::high_resolution_clock::now();
+        
         while (getline(logFile, logLine)) {
             expectedExecutionState = parseExecutionStateFromLogLine(logLine);
             actualExecutionState = cpu.getExecutionState();
@@ -76,13 +80,17 @@ void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
             assert(("yRegister is incorrect!", actualExecutionState->yRegister == expectedExecutionState->yRegister));
             assert(("statusRegister is incorrect!", actualExecutionState->statusRegister == expectedExecutionState->statusRegister));
             assert(("stackpointer is incorrect!", actualExecutionState->stackPointer == expectedExecutionState->stackPointer));
+            assert(("timing is incorrect", actualExecutionState->cycle == expectedExecutionState->cycle));
+            
             cpu.step();
             
             delete expectedExecutionState;
             delete actualExecutionState;
         }
         
-        std::cout << testROMPath << " test PASSED!\n";
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+        std::cout << testROMPath << " test PASSED! " << duration << " ms.\n";
         
         logFile.close();
     }

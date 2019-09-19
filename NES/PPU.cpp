@@ -1,14 +1,25 @@
-//
-//  PPU.cpp
-//  NES
-//
-//  Created by Ahmed Harmouche on 2018. 03. 21..
-//  Copyright © 2018. Ahmed Harmouche. All rights reserved.
-//
-
 #include "PPU.hpp"
 #include <iostream>
 #include <bitset>
+
+void PPU::tick() {
+    if (scanLine == -1) { //pre-render scanline
+        
+    } else if (scanLine >= 0 && scanLine <= 239) {
+        
+    } else if (scanLine == 240) { //pos-render scanline
+        
+    } else if (scanLine >= 241 && scanLine <= 260) { //vblank
+        
+    }
+    
+    if (dot == 341) {
+        scanLine++;
+        dot = 0;
+    } else {
+        dot++;
+    }
+}
 
 uint8_t* PPU::read(uint16_t address) {
     address %= 8;
