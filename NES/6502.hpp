@@ -9,6 +9,7 @@
 #include "RAM.hpp"
 #include "ROM.hpp"
 #include "PPU.hpp"
+#include "Controller.hpp"
 
 struct ExecutionState {
     uint8_t accumulator;
@@ -31,14 +32,15 @@ private:
     //Other
     uint16_t programCounter = 0;
     uint8_t stackPointer = 0xFD;
-    uint8_t statusRegister = 0x24;
+    uint8_t statusRegister = 0x00;
     
-    int cycle = 7;
+    int cycle = 0;
     
     //Devices
     RAM ram;
     ROM* rom;
     PPU* ppu;
+    Controller* controller;
     
     std::stringstream execLog;
     
@@ -69,9 +71,9 @@ private:
     inline void setCarry(bool);
     
     //vectors
-    void irq();
-    
-    void reset();
+    inline void irq();
+    inline void reset();
+    inline void NMI();
     
     inline void LOG_EXEC(uint8_t instr);
     
@@ -324,16 +326,16 @@ private:
     
     void tickIfToNewPage(uint16_t, uint16_t);
     
-    void tickIfToNewPageBranch(uint16_t);
-    
+    inline void pushPC();
 public:
-    CPU6502(ROM* rom, PPU* ppu) : rom(rom), ppu(ppu) { };
+    CPU6502(ROM* rom, PPU* ppu, Controller* controller) : rom(rom), ppu(ppu), controller(controller) { };
     uint8_t fetchInstruction();
     void executeInstruction(uint8_t);
     uint8_t* memoryAccess(MemoryAccessMode, uint16_t, uint8_t);
     uint8_t* read(uint16_t);
     void write(uint16_t, uint8_t);
     void run();
+    void startup();
     void step();
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();

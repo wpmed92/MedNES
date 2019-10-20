@@ -1,14 +1,6 @@
 #include "6502.hpp"
 #include <assert.h>
 
-void CPU6502::run() {
-    reset();
-    
-    while (true) {
-        step();
-    }
-}
-
 void CPU6502::step() {
     //LOG_PC();
     uint8_t instruction = fetchInstruction();
@@ -16,6 +8,15 @@ void CPU6502::step() {
     //LOG_CPU_STATE();
     //PRINT_LOG();
     programCounter++;
+    
+    if (ppu->genNMI()) {
+        NMI();
+        cycle = 0;
+    }
+}
+
+void CPU6502::startup() {
+    reset();
 }
 
 inline void CPU6502::tick() {
@@ -71,14 +72,33 @@ uint8_t CPU6502::fetchInstruction() {
     return *read(programCounter);
 }
 
-void CPU6502::reset() {
+inline void CPU6502::pushPC() {
+    uint8_t lsb = programCounter & 0xFF;
+    uint8_t msb = programCounter >> 8;
+    pushStack(msb);
+    pushStack(lsb);
+}
+
+//Interupts
+inline void CPU6502::reset() {
     //init program counter = $FFFC, $FFFD
     programCounter = *read(0xFFFD) * 256 + *read(0xFFFC);
 }
 
-void CPU6502::irq() {
+inline void CPU6502::irq() {
+    pushPC();
+    pushStack(statusRegister);
     uint8_t lsb = *read(0xFFFE);
     uint8_t msb = *read(0xFFFF);
+    programCounter = msb * 256 + lsb;
+}
+
+inline void CPU6502::NMI() {
+    SEI();
+    pushPC();
+    pushStack(statusRegister);
+    uint8_t lsb = *read(0xFFFA);
+    uint8_t msb = *read(0xFFFB);
     programCounter = msb * 256 + lsb;
 }
 
@@ -481,16 +501,18 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
                     ppu->copyOAM(*read(data * 256 + i), i);
                 }
             }
+        } else {
+            if (mode == MemoryAccessMode::READ) {
+                readData = controller->read(address);
+            } else {
+                controller->write(address, data);
+            }
         }
         //APU I/O registers
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
     } else if (address >= 0x8000 && address < 0xFFFF) {
         readData = rom->read(address);
-    }
-    
-    if (readData != nullptr) {
-        LOG_EXEC(*readData);
     }
     
     tick();
@@ -667,17 +689,14 @@ void CPU6502::BIT(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::BRK() {
-    uint8_t lsb = programCounter & 0xFF;
-    uint8_t msb = programCounter >> 8;
-    pushStack(lsb);
-    pushStack(msb);
+    pushPC();
     uint8_t statusRegCpy = statusRegister;
     statusRegCpy |= (1 << 4);
     statusRegCpy |= (1 << 5);
     pushStack(statusRegCpy);
-    irq();
-    setBreak4(1);
-    setBreak5(1);
+    uint8_t lsb = *read(0xFFFE);
+    uint8_t msb = *read(0xFFFF);
+    programCounter = msb * 256 + lsb;
 }
 
 void CPU6502::CLC() {

@@ -13,8 +13,8 @@
 		80CD8C0D2062F62E007DF492 /* ROM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0B2062F62E007DF492 /* ROM.cpp */; };
 		80CD8C102062F640007DF492 /* PPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80CD8C0E2062F640007DF492 /* PPU.cpp */; };
 		CE2C8BF82322837F00643BF4 /* CPUTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE2C8BF62322837F00643BF4 /* CPUTest.cpp */; };
-		CEA2D1F2232D820800EE1064 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEA2D1F1232D820800EE1064 /* OpenGL.framework */; };
-		CEA2D1F4232D821100EE1064 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEA2D1F3232D821100EE1064 /* GLUT.framework */; };
+		CE3640E22346825200106B84 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CE3640E12346825200106B84 /* libSDL2-2.0.0.dylib */; };
+		CEA2D1FA2334D9DD00EE1064 /* Controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA2D1F82334D9DD00EE1064 /* Controller.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,8 +43,11 @@
 		80CD8C0F2062F640007DF492 /* PPU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PPU.hpp; sourceTree = "<group>"; };
 		CE2C8BF62322837F00643BF4 /* CPUTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CPUTest.cpp; path = test/CPUTest.cpp; sourceTree = SOURCE_ROOT; };
 		CE2C8BF72322837F00643BF4 /* CPUTest.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CPUTest.hpp; path = test/CPUTest.hpp; sourceTree = SOURCE_ROOT; };
+		CE3640E12346825200106B84 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../usr/local/Cellar/sdl2/2.0.10/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		CEA2D1F1232D820800EE1064 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		CEA2D1F3232D821100EE1064 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		CEA2D1F82334D9DD00EE1064 /* Controller.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Controller.cpp; sourceTree = "<group>"; };
+		CEA2D1F92334D9DD00EE1064 /* Controller.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Controller.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,8 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CEA2D1F4232D821100EE1064 /* GLUT.framework in Frameworks */,
-				CEA2D1F2232D820800EE1064 /* OpenGL.framework in Frameworks */,
+				CE3640E22346825200106B84 /* libSDL2-2.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,6 +94,8 @@
 				803F11EC2066E0BC0020FCD2 /* INESBus.hpp */,
 				CE2C8BF62322837F00643BF4 /* CPUTest.cpp */,
 				CE2C8BF72322837F00643BF4 /* CPUTest.hpp */,
+				CEA2D1F82334D9DD00EE1064 /* Controller.cpp */,
+				CEA2D1F92334D9DD00EE1064 /* Controller.hpp */,
 			);
 			path = NES;
 			sourceTree = "<group>";
@@ -99,6 +103,7 @@
 		CEA2D1F0232D820800EE1064 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CE3640E12346825200106B84 /* libSDL2-2.0.0.dylib */,
 				CEA2D1F3232D821100EE1064 /* GLUT.framework */,
 				CEA2D1F1232D820800EE1064 /* OpenGL.framework */,
 			);
@@ -167,6 +172,7 @@
 				80BA5FC820571F3000336A80 /* 6502.cpp in Sources */,
 				80CD8C0D2062F62E007DF492 /* ROM.cpp in Sources */,
 				CE2C8BF82322837F00643BF4 /* CPUTest.cpp in Sources */,
+				CEA2D1FA2334D9DD00EE1064 /* Controller.cpp in Sources */,
 				805B6F6B2055C7A900B79546 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -281,6 +287,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/sdl2/2.0.10/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -289,6 +300,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/sdl2/2.0.10/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

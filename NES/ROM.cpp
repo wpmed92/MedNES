@@ -46,11 +46,21 @@ void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
     prgCode.insert(prgCode.end(), code.begin(), code.end());
 }
 
+//cpu bus
 uint8_t* ROM::read(uint16_t address) {
     address = (address - 0x8000) % prgCode.size();
     return &prgCode[address];
 }
 
 void ROM::write(uint16_t address, uint8_t data) {
+    //EXCEPTION: READONLY
+}
+
+//ppu bus
+uint8_t ROM::ppuread(uint16_t address) {
+    return chrData[address];
+}
+
+void ROM::ppuwrite(uint16_t address, uint8_t data) {
     //EXCEPTION: READONLY
 }
