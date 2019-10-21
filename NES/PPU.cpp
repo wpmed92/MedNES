@@ -32,7 +32,7 @@ void PPU::tick() {
         }
     } else if (scanLine >= 0 && scanLine <= 239) { //visible scanline
         if (dot >= 1 & dot <= 256) { //start at tile 3
-            emitPixel();
+            //emitPixel();
             //fetchTiles();
             
             if (dot > 1 && (dot % 8) == 1) {
@@ -150,16 +150,22 @@ void PPU::printNametable() {
         for (int j = 0; j < 32; j++) {
             int index = i * 32 + j;
             uint8_t nbyte = ppuread(0x2000 | index);
-            //uint16_t patternAddr = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
+            /*uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
+            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;*/
             
             for (int k = 0; k < 8; k++) {
-                //patternAddr += k;
-                //uint8_t sliver = ppuread(patternAddr);
+                /*lo += k;
+                high += k;
+                uint8_t sliverlo = ppuread(lo);
+                uint8_t sliverhigh = ppuread(high);*/
                 
                 for (int l = 0; l < 8; l++) {
-                    //uint8_t pixel = sliver & 128;
+                    /*uint8_t pixello = sliverlo & 128;
+                    uint8_t pixelhi = sliverhigh & 128;
+                    uint8_t pixel = pixello >> 8 | pixelhi >> 7;*/
                     frame[(i*8+k)*256+(j*8+l)] = nbyte;
-                    //sliver >>= 1;
+                    /*sliverlo >>= 1;
+                    sliverhigh >>= 1;*/
                 }
             }
         }

@@ -13,8 +13,8 @@ int main(int argc, char ** argv) {
         "MedNES",                  // window title
         SDL_WINDOWPOS_UNDEFINED,           // initial x position
         SDL_WINDOWPOS_UNDEFINED,           // initial y position
-        256,                               // width, in pixels
-        240,                               // height, in pixels
+        512,                               // width, in pixels
+        480,                               // height, in pixels
         SDL_WINDOW_SHOWN                  // flags - see below
     );
 
@@ -39,17 +39,25 @@ int main(int argc, char ** argv) {
     cpu.startup();
     
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
+
+    int nmiCounter = 0;
     
     while (is_running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                is_running = false;
-            }
-        }
-        
         cpu.step();
         
         if (ppu.generateFrame) {
+            nmiCounter++;
+            
+            if (nmiCounter == 60) {
+                while (SDL_PollEvent(&event)) {
+                    if (event.type == SDL_QUIT) {
+                        is_running = false;
+                    }
+                }
+                nmiCounter = 0;
+                
+            }
+            
             ppu.printNametable();
             ppu.generateFrame = false;
             Uint32 * pixels = new Uint32[256 * 240];
@@ -61,6 +69,7 @@ int main(int argc, char ** argv) {
                 }
             }
             
+            SDL_RenderSetScale(s, 2, 2);
             SDL_UpdateTexture(texture, NULL, pixels, 256 * sizeof(Uint32));
             SDL_RenderClear(s);
             SDL_RenderCopy(s, texture, NULL, NULL);
