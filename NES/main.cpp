@@ -64,7 +64,7 @@ int main(int argc, char ** argv) {
             
             for (int i = 0; i < 240; i++) {
                 for (int j = 0; j < 256; j++) {
-                    uint8_t color = ppu.frame[i*256+j];
+                    uint8_t color = ppu.frame[i*256+j] * 64;
                     pixels[i*256+j] = 255 << 24 | color << 16 | color << 8 | color;
                 }
             }

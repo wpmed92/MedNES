@@ -150,22 +150,22 @@ void PPU::printNametable() {
         for (int j = 0; j < 32; j++) {
             int index = i * 32 + j;
             uint8_t nbyte = ppuread(0x2000 | index);
-            /*uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
-            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;*/
+            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
+            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;
             
             for (int k = 0; k < 8; k++) {
-                /*lo += k;
+                lo += k;
                 high += k;
                 uint8_t sliverlo = ppuread(lo);
-                uint8_t sliverhigh = ppuread(high);*/
+                uint8_t sliverhigh = ppuread(high);
                 
                 for (int l = 0; l < 8; l++) {
-                    /*uint8_t pixello = sliverlo & 128;
+                    uint8_t pixello = sliverlo & 128;
                     uint8_t pixelhi = sliverhigh & 128;
-                    uint8_t pixel = pixello >> 8 | pixelhi >> 7;*/
-                    frame[(i*8+k)*256+(j*8+l)] = nbyte;
-                    /*sliverlo >>= 1;
-                    sliverhigh >>= 1;*/
+                    uint8_t pixel = (pixello >> 8) | (pixelhi >> 7);
+                    frame[(i*8+k)*256+(j*8+l)] = pixel;
+                    sliverlo <<= 1;
+                    sliverhigh <<= 1;
                 }
             }
         }
