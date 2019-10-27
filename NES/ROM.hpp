@@ -28,13 +28,14 @@ private:
     std::vector<uint8_t> prgCode;
     std::vector<uint8_t> chrData;
     uint8_t chrRAM[8192];
+    int mirroring;
     
 public:
     std::vector<uint8_t> getChrData() { return chrData; };
     void open(std::string);
     void printHeader();
     void loadTestProgramcode(std::vector<uint8_t>);
-    
+    int getMirroring();
     //cpu address space
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);

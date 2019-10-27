@@ -1,6 +1,5 @@
 #include "PPU.hpp"
 #include <iostream>
-#include <bitset>
 
 void PPU::tick() {
     if (scanLine == 261) { //pre-render scanline
@@ -23,7 +22,7 @@ void PPU::tick() {
         if (scanLine == 241 && dot == 1) {
             ppustatus |= 0x80;
             
-            if (ppuctrl & 0x80 && ppustatus & 0x80) {
+            if (ppuctrl & 0x80) {
                 nmiOccured = true;
             }
         }
@@ -195,10 +194,6 @@ void PPU::write(uint16_t address, uint8_t data) {
         if (address == 0) {
             t = 0;
             t |= (data & 0x3) << 10;
-            
-            if (data & 0x80 && ppustatus & 0x80) {
-                nmiOccured = true;
-            }
             ppuctrl = data;
         } else if (address == 1) {
             ppumask = data;
@@ -227,7 +222,7 @@ void PPU::write(uint16_t address, uint8_t data) {
                 t = (t & 0x80FF) | (((uint16_t)data & 0x3F) << 8);
                 w = 1;
             } else {
-                t = (t & 0xFF00) | (uint16_t)data;
+                t = (t & 0xFF00) | (uint16_t) data;
                 v = t;
                 w = 0;
             }
@@ -246,10 +241,17 @@ uint8_t PPU::ppuread(uint16_t address) {
             return rom->ppuread(address);
             break;
         case 0x2000 ... 0x2FFF:
-            //Hardcoded horizontal mirroring
-            address = ((address / 2) & 0x400) + (address % 0x400);
-           
-            return vram[address];
+            if (rom->getMirroring() == 0) {
+                if (address >= 0x2800 && address < 0x2c00) {
+                    address -= 0x400;
+                }
+            }
+            
+            if (address >= 0x2c00 && address < 0x3000) {
+                address -= 0x800;
+            }
+
+            return vram[address - 0x2000];
             break;
         case 0x3000 ... 0x3EFF:
             return ppuread(address - 0x1000);
@@ -266,10 +268,17 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             rom->ppuwrite(address, data);
             break;
         case 0x2000 ... 0x2FFF:
-            //Hardcoded horizontal mirroring
+            if (rom->getMirroring() == 0) {
+                if (address >= 0x2800 && address < 0x2c00) {
+                    address -= 0x400;
+                }
+            }
             
-            address = ((address / 2) & 0x400) + (address % 0x400);
-            vram[address] = data;
+            if (address >= 0x2c00 && address < 0x3000) {
+                address -= 0x800;
+            }
+
+            vram[address - 0x2000] = data;
             break;
         case 0x3000 ... 0x3EFF:
             ppuwrite(address - 0x1000, data);

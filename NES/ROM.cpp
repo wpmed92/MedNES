@@ -23,6 +23,8 @@ void ROM::open(std::string filePath ) {
     prgCode.resize(prgSize);
     chrData.resize(chrSize);
     
+    mirroring = header.flags6 & 1;
+    
     //If trainer present
     if ((header.flags6 >> 2) & 1) {
         in.read((char *)trainer.data(), 512);
@@ -48,6 +50,10 @@ void ROM::printHeader() {
 
 void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
     prgCode.insert(prgCode.end(), code.begin(), code.end());
+}
+
+int ROM::getMirroring() {
+    return mirroring;
 }
 
 //cpu bus
