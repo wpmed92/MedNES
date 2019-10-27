@@ -27,6 +27,7 @@ private:
     std::vector<uint8_t> trainer;
     std::vector<uint8_t> prgCode;
     std::vector<uint8_t> chrData;
+    uint8_t chrRAM[8192];
     
 public:
     std::vector<uint8_t> getChrData() { return chrData; };

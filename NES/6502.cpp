@@ -498,7 +498,9 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
                 ppu->write(address, data);
                 
                 for (int i = 0; i < 0xFF; i++) {
-                    ppu->copyOAM(*read(data * 256 + i), i);
+                    tick();
+                    tick();
+                    //ppu->copyOAM(*read(data * 256 + i), i);
                 }
             }
         } else {
@@ -511,11 +513,12 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
         //APU I/O registers
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
-    } else if (address >= 0x8000 && address < 0xFFFF) {
+    } else if (address >= 0x8000 && address <= 0xFFFF) {
         readData = rom->read(address);
     }
     
     tick();
+
     
     return readData;
 }

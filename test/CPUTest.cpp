@@ -57,7 +57,8 @@ void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
     ROM rom;
     rom.open(testROMPath);
     PPU ppu = PPU(&rom);
-    CPU6502 cpu = CPU6502(&rom, &ppu, nullptr);
+    Controller controller;
+    CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
     cpu.setProgramCounter(0xC000);
     
     ExecutionState* expectedExecutionState;

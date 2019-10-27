@@ -13,19 +13,24 @@ struct OAM {
     uint8_t spriteX;
 };
 
+struct addr {
+    uint8_t hi;
+    uint8_t lo;
+};
+
 class PPU : public INESBus {
 private:
     
     //Registers
-    uint8_t ppuctrl = 0x80; //$2000
+    uint8_t ppuctrl = 0; //$2000
     uint8_t ppumask = 0; //$2001
     uint8_t ppustatus = 0; //$2002
     uint8_t ppustatus_cpy = 0;
     uint8_t oamaddr = 0; //$2003
     uint8_t oamdata = 0; //$2004
     uint8_t ppuscroll = 0; //$2005
-    uint8_t ppuaddr = 0; //$2006
-    uint8_t ppudata = 0; //$2007
+    uint8_t ppu_read_buffer = 0;
+    uint8_t ppu_read_buffer_cpy = 0;
     
     uint8_t palette[192] =
     {
@@ -37,14 +42,14 @@ private:
     uint8_t vram[2048] = { 0 };
     
     //current vram address, temporary vram address
-    uint16_t v = 0, t = 0;
+    uint16_t v = 0, t = 0, tscroll = 0;
     
     //fine x scroll
     uint8_t x = 0;
     
     //first/second write toggle
     int w = 0;
-    
+    addr testV;
     uint8_t ntbyte, attrbyte, patternlow, patternhigh;
     
     uint16_t shiftReg1;
@@ -60,9 +65,11 @@ private:
     ROM* rom;
     
     //Scanline
-    int dot = 0;
-    int scanLine = -1;
+    int scanLine = 0;
     int pixelIndex = 0;
+    bool odd = false;
+    bool nmiOccured = false;
+    inline bool isRenderingDisabled();
     inline void emitPixel();
     inline void loadRegisters();
     inline void fetchTiles();
@@ -70,6 +77,8 @@ private:
     inline void yIncrement();
     
 public:
+    
+    int dot = 0;
     PPU(ROM* rom) : rom(rom) { };
     //cpu address space
     uint8_t* read(uint16_t address);

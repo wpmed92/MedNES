@@ -1,6 +1,7 @@
 #include "ROM.hpp"
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 void ROM::open(std::string filePath ) {
     std::ifstream in(filePath, std::ios::binary);
@@ -28,7 +29,10 @@ void ROM::open(std::string filePath ) {
     }
     
     in.read((char *)prgCode.data(), header.prgIn16kb * 16384);
-    in.read((char *)chrData.data(), header.chrIn8kb * 8192);
+    
+    if (header.chrIn8kb > 0) {
+        in.read((char *)chrData.data(), header.chrIn8kb * 8192);
+    }
 }
 
 void ROM::printHeader() {
@@ -58,9 +62,15 @@ void ROM::write(uint16_t address, uint8_t data) {
 
 //ppu bus
 uint8_t ROM::ppuread(uint16_t address) {
-    return chrData[address];
+    if (header.chrIn8kb == 0) {
+        return chrRAM[address];
+    } else {
+        return chrData[address];
+    }
 }
 
 void ROM::ppuwrite(uint16_t address, uint8_t data) {
-    //EXCEPTION: READONLY
+    if (header.chrIn8kb == 0) {
+        chrRAM[address] = data;
+    }
 }

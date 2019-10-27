@@ -30,14 +30,12 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
     CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
-    
     cpu.startup();
-    
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
 
     int nmiCounter = 0;
@@ -48,14 +46,14 @@ int main(int argc, char ** argv) {
         if (ppu.generateFrame) {
             nmiCounter++;
             
-            if (nmiCounter == 60) {
+            if (nmiCounter == 30) {
                 while (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) {
                         is_running = false;
                     }
                 }
-                nmiCounter = 0;
                 
+                nmiCounter = 0;
             }
             
             ppu.printNametable();
@@ -75,14 +73,12 @@ int main(int argc, char ** argv) {
             SDL_RenderCopy(s, texture, NULL, NULL);
             SDL_RenderPresent(s);
             delete[] pixels;
-            cpu.step();
         }
     }
 
     SDL_Delay(3000);
 
     SDL_DestroyWindow(window);
-    //CPU Tests
     /*CPUTest cpuTest;
     cpuTest.runTest("/users/wpmed92/Desktop/NES/test/nestest.nes", "/users/wpmed92/Desktop/NES/test/nestest.log");*/
     

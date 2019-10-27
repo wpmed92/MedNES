@@ -3,72 +3,37 @@
 #include <bitset>
 
 void PPU::tick() {
-    if (scanLine == 261) {
-        scanLine = -1;
-        generateFrame = true;
-    }
-    
-    if (scanLine == -1) { //pre-render scanline
+    if (scanLine == 261) { //pre-render scanline
         if (dot == 1) {
             ppustatus &= ~0x80;
         }
-
-        pixelIndex = 0;
-        //fetch first two tiles
-        if (dot >= 321 && dot <= 336) {
-            //fetchTiles();
-            
-            if (dot == 329) {
-                //xIncrement();
-                shiftReg1 += patternlow;
-                shiftReg2 += patternhigh;
-            }
-            
-            if (dot == 336) {
-                //xIncrement();
-                shiftReg1 += patternlow * 256;
-                shiftReg2 += patternhigh * 256;
-            }
+        
+        if (odd && !isRenderingDisabled() && dot == 339) {
+            dot = 0;
+            scanLine = 0;
+            tick();
         }
+
     } else if (scanLine >= 0 && scanLine <= 239) { //visible scanline
-        if (dot >= 1 & dot <= 256) { //start at tile 3
-            //emitPixel();
-            //fetchTiles();
-            
-            if (dot > 1 && (dot % 8) == 1) {
-                //xIncrement();
-                //loadRegisters();
-            }
-            
-            if (dot == 256) {
-                //yIncrement();
-                shiftReg1 = 0;
-                shiftReg2 = 0;
-            }
-        } else if (dot >= 321 && dot <= 336) { //fetch first two tiles
-            //fetchTiles();
-            
-            if (dot == 329) {
-                //xIncrement();
-                shiftReg1 += patternlow;
-                shiftReg2 += patternhigh;
-            }
-            
-            if (dot == 336) {
-                //xIncrement();
-                shiftReg1 += patternlow * 256;
-                shiftReg2 += patternhigh * 256;
-            }
+        if(scanLine == 239 && dot == 1) {
+            generateFrame = true;
         }
     } else if (scanLine == 240) { //post-render scanline
     } else if (scanLine >= 241 && scanLine <= 260) { //vblank
         if (scanLine == 241 && dot == 1) {
             ppustatus |= 0x80;
+            
+            if (ppuctrl & 0x80 && ppustatus & 0x80) {
+                nmiOccured = true;
+            }
         }
     }
     
-    if (dot == 341) {
-        scanLine++;
+    if (dot == 340) {
+        scanLine = (scanLine+1) % 262;
+        if (scanLine == 0) {
+            odd = !odd;
+        }
         dot = 0;
     } else {
         dot++;
@@ -105,6 +70,10 @@ inline void PPU::yIncrement() {
   }
 }
 
+inline bool PPU::isRenderingDisabled() {
+    return !((ppumask & 8) || (ppumask & 16));
+}
+
 inline void PPU::loadRegisters() {
     shiftReg1 += patternlow * 256;
     shiftReg2 += patternhigh * 256;
@@ -121,7 +90,7 @@ inline void PPU::fetchTiles() {
     
     if (dot % 8 == 5) {
         uint16_t patterAddr =
-        (((uint16_t) ppuctrl & 0x10) << 7) +
+        (((uint16_t) ppuctrl & 0x10) << 8) +
         ((uint16_t) ntbyte << 4) +
         (v & 0x7000);
         patternlow = ppuread(patterAddr);
@@ -129,7 +98,7 @@ inline void PPU::fetchTiles() {
     
     if (dot % 8 == 7) {
         uint16_t patterAddr =
-        (((uint16_t) ppuctrl & 0x10) << 7) +
+        (((uint16_t) ppuctrl & 0x10) << 8) +
          ((uint16_t) ntbyte << 4) +
          (v & 0x7000) + 8;
         patternhigh = ppuread(patterAddr);
@@ -137,42 +106,58 @@ inline void PPU::fetchTiles() {
 }
 
 inline void PPU::emitPixel() {
-    uint8_t pixel1 = shiftReg1 & 1;
-    uint8_t pixel2 = shiftReg2 & 1;
-    shiftReg1 >>= 1;
-    shiftReg2 >>= 1;
-    //frame[pixelIndex++] = (pixel2 << 1) + pixel1;
+    uint8_t pixel1 = shiftReg1 & 128;
+    uint8_t pixel2 = shiftReg2 & 128;
+    shiftReg1 <<= 1;
+    shiftReg2 <<= 1;
+    frame[pixelIndex++] = (pixel2 >> 6) + (pixel1 >> 7);
 }
 
 void PPU::printNametable() {
+    if (isRenderingDisabled()) {
+        return;
+    }
     
     for (int i = 0; i < 30; i++) {
         for (int j = 0; j < 32; j++) {
             int index = i * 32 + j;
             uint8_t nbyte = ppuread(0x2000 | index);
+            
             uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
             uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;
             
             for (int k = 0; k < 8; k++) {
-                lo += k;
-                high += k;
                 uint8_t sliverlo = ppuread(lo);
                 uint8_t sliverhigh = ppuread(high);
                 
+                lo++;
+                high++;
                 for (int l = 0; l < 8; l++) {
                     uint8_t pixello = sliverlo & 128;
                     uint8_t pixelhi = sliverhigh & 128;
-                    uint8_t pixel = (pixello >> 8) | (pixelhi >> 7);
-                    frame[(i*8+k)*256+(j*8+l)] = pixel;
+                    uint8_t pixel = (pixelhi >> 6) | (pixello >> 7);
+                    int frami = (i*8+k)*256+(j*8+l);
+                    frame[frami] = pixel;
                     sliverlo <<= 1;
                     sliverhigh <<= 1;
                 }
             }
+            
+           // xIncrement();
         }
+        //yIncrement();
     }
 }
 
-bool PPU::genNMI() { return (ppuctrl & 0x80) && (*read(0x2002) & 0x80); }
+bool PPU::genNMI() {
+    if (nmiOccured == true) {
+        nmiOccured = false;
+        return true;
+    } else {
+        return false;
+    }
+    
+}
 
 uint8_t* PPU::read(uint16_t address) {
     address %= 8;
@@ -190,14 +175,12 @@ uint8_t* PPU::read(uint16_t address) {
         return &oamaddr;
     } else if (address == 4) {
         return &oamdata;
-    } else if (address == 5) {
-        return &ppuscroll;
-    } else if (address == 6) {
-        return &ppuaddr;
     } else if (address == 7) {
+        ppu_read_buffer = ppu_read_buffer_cpy;
+        ppu_read_buffer_cpy = ppuread(v);
         v += ((ppuctrl & 4) ? 32 : 1);
-        v %= 16384;
-        return &ppudata;
+        v%=16384;
+        return &ppu_read_buffer;
     }
     
     return nullptr;
@@ -211,46 +194,48 @@ void PPU::write(uint16_t address, uint8_t data) {
         
         if (address == 0) {
             t = 0;
-            t += (data & 0x3) << 10;
+            t |= (data & 0x3) << 10;
+            
+            if (data & 0x80 && ppustatus & 0x80) {
+                nmiOccured = true;
+            }
             ppuctrl = data;
         } else if (address == 1) {
             ppumask = data;
         } else if (address == 2) {
-            ppustatus = data;
+            data &= ~128;
+            ppustatus &= 128;
+            ppustatus |= data;
         } else if (address == 3) {
             oamaddr = data;
         } else if (address == 4) {
             oamdata = data;
         } else if (address == 5) {
             if (w == 0) {
-                t += (data >> 3);
+                t |= (data >> 3);
                 x = data & 7;
                 w = 1;
             } else {
-                t += (data & 7) << 12;
-                t += (data & 0xF8) << 2;
-                v = t;
+                t |= (data & 7) << 12;
+                t |= (data & 0xF8) << 2;
                 w = 0;
             }
             
             ppuscroll = data;
         } else if (address == 6) {
             if (w == 0) {
-                t = 0;
-                t = data << 8;
+                t = (t & 0x80FF) | (((uint16_t)data & 0x3F) << 8);
                 w = 1;
             } else {
-                t += data;
+                t = (t & 0xFF00) | (uint16_t)data;
                 v = t;
                 w = 0;
             }
             
-            ppuaddr = data;
         } else if (address == 7) {
             ppuwrite(v, data);
-            v += (ppuctrl & 4) ? 32 : 1;
+            v += ((ppuctrl & 4) ? 32 : 1);
             v %= 16384;
-            ppudata = data;
         }
     }
 }
@@ -262,47 +247,29 @@ uint8_t PPU::ppuread(uint16_t address) {
             break;
         case 0x2000 ... 0x2FFF:
             //Hardcoded horizontal mirroring
-            if (address >= 0x2400 && address < 0x2800) {
-               address -= 0x400;
-            }
+            address = ((address / 2) & 0x400) + (address % 0x400);
            
-            if (address >= 0x2800 && address < 0x2c00) {
-               address -= 0x400;
-            }
-           
-            if (address >= 0x2c00 && address < 0x3000) {
-               address -= 0x800;
-            }
-           
-            return vram[address - 0x2000];
+            return vram[address];
             break;
         case 0x3000 ... 0x3EFF:
             return ppuread(address - 0x1000);
             break;
         default:
-            return 0;
+            return 1;
             break;
     }
 }
 
 void PPU::ppuwrite(uint16_t address, uint8_t data) {
     switch (address) {
-        case 0x0000 ... 0x1FFF: rom->ppuwrite(address, data); break;
+        case 0x0000 ... 0x1FFF:
+            rom->ppuwrite(address, data);
+            break;
         case 0x2000 ... 0x2FFF:
             //Hardcoded horizontal mirroring
-            if (address >= 0x2400 && address < 0x2800) {
-                address -= 0x400;
-            }
             
-            if (address >= 0x2800 && address < 0x2c00) {
-                address -= 0x400;
-            }
-            
-            if (address >= 0x2c00 && address < 0x3000) {
-                address -= 0x800;
-            }
-            
-            vram[address - 0x2000] = data;
+            address = ((address / 2) & 0x400) + (address % 0x400);
+            vram[address] = data;
             break;
         case 0x3000 ... 0x3EFF:
             ppuwrite(address - 0x1000, data);

@@ -9,7 +9,7 @@ class RAM : public INESBus {
     
 //256 byte pages, 8 pages on internal NES RAM
 private:
-    uint8_t ram[2048];
+    uint8_t ram[2048] = {0};
     
 public:
     uint8_t* read(uint16_t address);

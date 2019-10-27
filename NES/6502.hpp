@@ -32,9 +32,9 @@ private:
     //Other
     uint16_t programCounter = 0;
     uint8_t stackPointer = 0xFD;
-    uint8_t statusRegister = 0x00;
+    uint8_t statusRegister = 0x24;
     
-    int cycle = 0;
+    int cycle = 7;
     
     //Devices
     RAM ram;
