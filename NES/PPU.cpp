@@ -113,6 +113,8 @@ inline void PPU::emitPixel() {
 }
 
 void PPU::printNametable() {
+    v = tscroll;
+    
     if (isRenderingDisabled()) {
         return;
     }
@@ -121,10 +123,10 @@ void PPU::printNametable() {
         for (int j = 0; j < 32; j++) {
             int index = i * 32 + j;
             uint8_t nbyte = ppuread(0x2000 | index);
+            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) ;
+            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) | 8;
             
-            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
-            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;
-            
+            //xIncrement();
             for (int k = 0; k < 8; k++) {
                 uint8_t sliverlo = ppuread(lo);
                 uint8_t sliverhigh = ppuread(high);
@@ -141,10 +143,7 @@ void PPU::printNametable() {
                     sliverhigh <<= 1;
                 }
             }
-            
-           // xIncrement();
         }
-        //yIncrement();
     }
 }
 
@@ -192,8 +191,7 @@ void PPU::write(uint16_t address, uint8_t data) {
         address %= 8;
         
         if (address == 0) {
-            t = 0;
-            t |= (data & 0x3) << 10;
+            tscroll = (tscroll & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
             ppuctrl = data;
         } else if (address == 1) {
             ppumask = data;
@@ -207,12 +205,12 @@ void PPU::write(uint16_t address, uint8_t data) {
             oamdata = data;
         } else if (address == 5) {
             if (w == 0) {
-                t |= (data >> 3);
+                tscroll = (tscroll & 0xFFE0) | ((uint16_t) data >> 3);
                 x = data & 7;
                 w = 1;
             } else {
-                t |= (data & 7) << 12;
-                t |= (data & 0xF8) << 2;
+                tscroll = (tscroll & 0x8FFF) | (((uint16_t) data & 0x07) << 12);
+                tscroll = (tscroll & 0xFC1F) | (((uint16_t) data & 0xF8) << 2);
                 w = 0;
             }
             
@@ -241,16 +239,26 @@ uint8_t PPU::ppuread(uint16_t address) {
             return rom->ppuread(address);
             break;
         case 0x2000 ... 0x2FFF:
+            //Horizontal
             if (rom->getMirroring() == 0) {
-                if (address >= 0x2800 && address < 0x2c00) {
+                if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
+                }
+
+                if (address >= 0x2800 && address < 0x2c00) {
+                   address -= 0x400;
+                }
+                
+                if (address >= 0x2c00 && address < 0x3000) {
+                  address -= 0x800;
+                }
+            //Vertical
+            } else {
+                if (address >= 0x2800 && address < 0x3000) {
+                   address -= 0x800;
                 }
             }
             
-            if (address >= 0x2c00 && address < 0x3000) {
-                address -= 0x800;
-            }
-
             return vram[address - 0x2000];
             break;
         case 0x3000 ... 0x3EFF:
@@ -268,14 +276,24 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             rom->ppuwrite(address, data);
             break;
         case 0x2000 ... 0x2FFF:
+            //Horizontal
             if (rom->getMirroring() == 0) {
-                if (address >= 0x2800 && address < 0x2c00) {
+                if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
-            }
-            
-            if (address >= 0x2c00 && address < 0x3000) {
-                address -= 0x800;
+
+                if (address >= 0x2800 && address < 0x2c00) {
+                   address -= 0x400;
+                }
+                
+                if (address >= 0x2c00 && address < 0x3000) {
+                  address -= 0x800;
+                }
+            //Vertical
+            } else {
+                if (address >= 0x2800 && address < 0x3000) {
+                   address -= 0x800;
+                }
             }
 
             vram[address - 0x2000] = data;
