@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Tennis.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -56,7 +56,7 @@ int main(int argc, char ** argv) {
                 nmiCounter = 0;
             }
             
-            ppu.printNametable();
+            ppu.scanliningDebug();
             ppu.generateFrame = false;
             Uint32 * pixels = new Uint32[256 * 240];
             
