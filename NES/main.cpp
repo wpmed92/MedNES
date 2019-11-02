@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
         if (ppu.generateFrame) {
             nmiCounter++;
             
-            if (nmiCounter == 30) {
+            if (nmiCounter == 15) {
                 while (SDL_PollEvent(&event)) {
                     if (event.type == SDL_QUIT) {
                         is_running = false;
@@ -56,7 +56,7 @@ int main(int argc, char ** argv) {
                 nmiCounter = 0;
             }
             
-            ppu.scanliningDebug();
+            //ppu.scanliningDebug();
             ppu.generateFrame = false;
             Uint32 * pixels = new Uint32[256 * 240];
             

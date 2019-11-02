@@ -13,15 +13,43 @@ void PPU::tick() {
                 scanLine = 0;
                 tick();
             }
+            
+            if (!isRenderingDisabled() && dot >= 280 && dot <= 304) {
+                v = (v & ~0x7BE0) | (t & 0x7BE0);
+            }
         }
-        
-        if (scanLine == 239 && dot == 1) {
-            generateFrame = true;
+    
+        if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
+            if (!isRenderingDisabled()) {
+                if (dot == 257) {
+                    copyHorizontalBits();
+                }
+            
+                if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
+                    emitPixel();
+                }
+                
+                fetchTiles();
+                
+                if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
+                    if (dot % 8 == 1) {
+                        shiftReg1 |= patternlow;
+                        shiftReg2 |= patternhigh;
+                    }
+                    shiftReg1 <<= 1;
+                    shiftReg2 <<= 1;
+                }
+            }
         }
     } else if (scanLine >= 240 && scanLine <= 260) { //post-render, vblank
+        if (scanLine == 240 && dot == 0) {
+            generateFrame = true;
+            pixelIndex = 0;
+        }
+        
         if (scanLine == 241 && dot == 1) {
             ppustatus |= 0x80;
-            
+
             if (ppuctrl & 0x80) {
                 nmiOccured = true;
             }
@@ -37,7 +65,6 @@ void PPU::tick() {
     } else {
         dot++;
     }
-    
 }
 
 inline void PPU::xIncrement() {
@@ -73,11 +100,6 @@ inline bool PPU::isRenderingDisabled() {
     return !((ppumask & 8) || (ppumask & 16));
 }
 
-inline void PPU::loadRegisters() {
-    shiftReg1 += patternlow * 256;
-    shiftReg2 += patternhigh * 256;
-}
-
 inline void PPU::fetchTiles() {
     if (dot % 8 == 1) {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
@@ -91,7 +113,7 @@ inline void PPU::fetchTiles() {
         uint16_t patterAddr =
         (((uint16_t) ppuctrl & 0x10) << 8) +
         ((uint16_t) ntbyte << 4) +
-        (v & 0x7000);
+        ((v & 0x7000) >> 12);
         patternlow = ppuread(patterAddr);
     }
     
@@ -99,17 +121,24 @@ inline void PPU::fetchTiles() {
         uint16_t patterAddr =
         (((uint16_t) ppuctrl & 0x10) << 8) +
          ((uint16_t) ntbyte << 4) +
-         (v & 0x7000) + 8;
+         ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
+    }
+    
+    if (dot % 8 == 0) {
+        if (dot == 256) {
+            xIncrement();
+            yIncrement();
+        } else {
+            xIncrement();
+        }
     }
 }
 
 inline void PPU::emitPixel() {
-    uint8_t pixel1 = shiftReg1 & 128;
-    uint8_t pixel2 = shiftReg2 & 128;
-    shiftReg1 <<= 1;
-    shiftReg2 <<= 1;
-    frame[pixelIndex++] = (pixel2 >> 6) + (pixel1 >> 7);
+    uint16_t pixel1 = shiftReg1 & 0x8000;
+    uint16_t pixel2 = shiftReg2 & 0x8000;
+    frame[pixelIndex++] = (pixel2 >> 14) + (pixel1 >> 15);
 }
 
 void PPU::printNametable() {
@@ -141,54 +170,8 @@ void PPU::printNametable() {
                     sliverhigh <<= 1;
                 }
             }
-            
-           // xIncrement();
         }
-        //yIncrement();
     }
-}
-
-void PPU::scanliningDebug() {
-    if (isRenderingDisabled()) {
-        return;
-    }
-    
-    v = t;
-    pixelIndex = 0;
-    
-    for (int i = 0; i < 240; i++) {
-        for (int j = 0; j < 256; j+=8) {
-            ntbyte = ppuread(0x2000 | (v & 0x0FFF));
-            
-            uint16_t patterAddr1 =
-            (((uint16_t) ppuctrl & 0x10) << 8) +
-            ((uint16_t) ntbyte << 4) +
-            ((v & 0x7000) >> 12) + x;
-            
-            uint16_t patterAddr2 =
-            (((uint16_t) ppuctrl & 0x10) << 8) +
-             ((uint16_t) ntbyte << 4) +
-             ((v & 0x7000) >> 12) + 8 + x;
-
-            patternlow = ppuread(patterAddr1);
-            patternhigh = ppuread(patterAddr2);
-                
-            for (int k = 0; k < 8; k++) {
-                uint8_t pixello = patternlow & 128;
-                uint8_t pixelhi = patternhigh & 128;
-                uint8_t pixel = (pixelhi >> 6) | (pixello >> 7);
-                frame[pixelIndex++] = pixel;
-                patternlow <<= 1;
-                patternhigh <<= 1;
-            }
-            
-            xIncrement();
-        }
-        
-        copyHorizontalBits();
-        yIncrement();
-    }
-    
 }
 
 inline void PPU::copyHorizontalBits() {
@@ -265,7 +248,6 @@ void PPU::write(uint16_t address, uint8_t data) {
             ppuscroll = data;
         } else if (address == 6) {
             if (w == 0) {
-                t = 0;
                 t = (t & 0x80FF) | (((uint16_t)data & 0x3F) << 8);
                 w = 1;
             } else {
@@ -344,7 +326,6 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
                     address -= 0x800;
                 }
             }
-
 
             vram[address - 0x2000] = data;
             break;
