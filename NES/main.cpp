@@ -47,53 +47,52 @@ int main(int argc, char ** argv) {
         cpu.step();
 
         if (controller.shouldPoll) {
-                std::string buttonState = "";
-                
-                while (SDL_PollEvent(&event)) {
-                    switch (event.type) {
-                        case SDL_KEYDOWN:
-                            switch(event.key.keysym.sym) {
-                                case SDLK_a:
-                                    buttonState += "a";
-                                    break;
-                                case SDLK_b:
-                                    buttonState += "b";
-                                    break;
-                                case SDLK_SPACE:
-                                    buttonState += "2";
-                                    break;
-                                case SDLK_RETURN:
-                                    buttonState += "3";
-                                    break;
-                                case SDLK_UP:
-                                    buttonState += "u";
-                                    break;
-                                case SDLK_DOWN:
-                                    buttonState += "d";
-                                    break;
-                                case SDLK_LEFT:
-                                    buttonState += "l";
-                                    break;
-                                case SDLK_RIGHT:
-                                    buttonState += "r";
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        //SDL_QUIT event (window close)
-                        case SDL_QUIT:
-                            is_running = false;
-                            break;
+            std::string buttonState = "";
+            
+            while (SDL_PollEvent(&event)) {
+                switch (event.type) {
+                    case SDL_KEYDOWN:
+                        switch(event.key.keysym.sym) {
+                            case SDLK_a:
+                                buttonState += "a";
+                                break;
+                            case SDLK_b:
+                                buttonState += "b";
+                                break;
+                            case SDLK_SPACE:
+                                buttonState += "2";
+                                break;
+                            case SDLK_RETURN:
+                                buttonState += "3";
+                                break;
+                            case SDLK_UP:
+                                buttonState += "u";
+                                break;
+                            case SDLK_DOWN:
+                                buttonState += "d";
+                                break;
+                            case SDLK_LEFT:
+                                buttonState += "l";
+                                break;
+                            case SDLK_RIGHT:
+                                buttonState += "r";
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    //SDL_QUIT event (window close)
+                    case SDL_QUIT:
+                        is_running = false;
+                        break;
 
-                        default:
-                            break;
-                    }
+                    default:
+                        break;
                 }
-                
-                controller.setButtonState(buttonState);
+            }
+            
+            controller.setButtonState(buttonState);
         }
-        
         
         if (ppu.generateFrame) {
             ppu.generateFrame = false;
