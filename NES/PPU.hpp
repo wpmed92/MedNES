@@ -69,6 +69,7 @@ private:
     int pixelIndex = 0;
     bool odd = false;
     bool nmiOccured = false;
+    inline void copyHorizontalBits();
     inline bool isRenderingDisabled();
     inline void emitPixel();
     inline void loadRegisters();
@@ -94,6 +95,7 @@ public:
     void drawFrame();
     bool generateFrame;
     void printNametable();
+    void scanliningDebug();
     uint8_t frame[256*240] = { 0 };
 };
 

@@ -2,26 +2,64 @@
 #include <iostream>
 
 void PPU::tick() {
-    if (scanLine == 261) { //pre-render scanline
-        if (dot == 1) {
-            ppustatus &= ~0x80;
+     if ((scanLine >= 0 && scanLine <= 239) || scanLine == 261) { //visible scanline, pre-render scanline
+        if (scanLine == 261) {
+            //clear vbl flag
+            if (dot == 1) {
+                ppustatus &= ~0x80;
+            }
+            
+            //skip dot on odd frame
+            if (odd && !isRenderingDisabled() && dot == 339) {
+                dot = 0;
+                scanLine = 0;
+                tick();
+            }
+            
+            //copy vertical bits
+            if (!isRenderingDisabled() && dot >= 280 && dot <= 304) {
+                v = (v & ~0x7BE0) | (t & 0x7BE0);
+            }
+        }
+    
+        //main hook: fetch tiles, emit pixel, shift
+        if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
+            if (!isRenderingDisabled()) {
+                if (dot == 257) {
+                    copyHorizontalBits();
+                }
+                
+                //if on visible scanlines and dots, emit pixel
+                if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
+                    emitPixel();
+                }
+                
+                //reload shift registers and shift
+                if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
+                    if (dot % 8 == 1) {
+                        shiftReg1 |= patternlow;
+                        shiftReg2 |= patternhigh;
+                    }
+                    
+                    shiftReg1 <<= 1;
+                    shiftReg2 <<= 1;
+                }
+                
+                //fetch nt, patter low, high
+                fetchTiles();
+            }
+        }
+    } else if (scanLine >= 240 && scanLine <= 260) { //post-render, vblank
+        if (scanLine == 240 && dot == 0) {
+            generateFrame = true;
+            pixelIndex = 0;
         }
         
-        if (odd && !isRenderingDisabled() && dot == 339) {
-            dot = 0;
-            scanLine = 0;
-            tick();
-        }
-
-    } else if (scanLine >= 0 && scanLine <= 239) { //visible scanline
-        if(scanLine == 239 && dot == 1) {
-            generateFrame = true;
-        }
-    } else if (scanLine == 240) { //post-render scanline
-    } else if (scanLine >= 241 && scanLine <= 260) { //vblank
         if (scanLine == 241 && dot == 1) {
+            //set vbl flag
             ppustatus |= 0x80;
-            
+
+            //flag for nmi
             if (ppuctrl & 0x80) {
                 nmiOccured = true;
             }
@@ -37,7 +75,6 @@ void PPU::tick() {
     } else {
         dot++;
     }
-    
 }
 
 inline void PPU::xIncrement() {
@@ -73,11 +110,6 @@ inline bool PPU::isRenderingDisabled() {
     return !((ppumask & 8) || (ppumask & 16));
 }
 
-inline void PPU::loadRegisters() {
-    shiftReg1 += patternlow * 256;
-    shiftReg2 += patternhigh * 256;
-}
-
 inline void PPU::fetchTiles() {
     if (dot % 8 == 1) {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
@@ -91,7 +123,7 @@ inline void PPU::fetchTiles() {
         uint16_t patterAddr =
         (((uint16_t) ppuctrl & 0x10) << 8) +
         ((uint16_t) ntbyte << 4) +
-        (v & 0x7000);
+        ((v & 0x7000) >> 12);
         patternlow = ppuread(patterAddr);
     }
     
@@ -99,17 +131,24 @@ inline void PPU::fetchTiles() {
         uint16_t patterAddr =
         (((uint16_t) ppuctrl & 0x10) << 8) +
          ((uint16_t) ntbyte << 4) +
-         (v & 0x7000) + 8;
+         ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
+    }
+    
+    if (dot % 8 == 0) {
+        if (dot == 256) {
+            xIncrement();
+            yIncrement();
+        } else {
+            xIncrement();
+        }
     }
 }
 
 inline void PPU::emitPixel() {
-    uint8_t pixel1 = shiftReg1 & 128;
-    uint8_t pixel2 = shiftReg2 & 128;
-    shiftReg1 <<= 1;
-    shiftReg2 <<= 1;
-    frame[pixelIndex++] = (pixel2 >> 6) + (pixel1 >> 7);
+    uint16_t pixel1 = shiftReg1 & 0x8000;
+    uint16_t pixel2 = shiftReg2 & 0x8000;
+    frame[pixelIndex++] = (pixel2 >> 14) + (pixel1 >> 15);
 }
 
 void PPU::printNametable() {
@@ -145,6 +184,10 @@ void PPU::printNametable() {
             }
         }
     }
+}
+
+inline void PPU::copyHorizontalBits() {
+    v = (v & ~0x41F) | (t & 0x41F);
 }
 
 bool PPU::genNMI() {
@@ -191,7 +234,7 @@ void PPU::write(uint16_t address, uint8_t data) {
         address %= 8;
         
         if (address == 0) {
-            tscroll = (tscroll & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
+            t = (t & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
             ppuctrl = data;
         } else if (address == 1) {
             ppumask = data;
@@ -205,12 +248,12 @@ void PPU::write(uint16_t address, uint8_t data) {
             oamdata = data;
         } else if (address == 5) {
             if (w == 0) {
-                tscroll = (tscroll & 0xFFE0) | ((uint16_t) data >> 3);
+                t = (t & 0xFFE0) | ((uint16_t) data >> 3);
                 x = data & 7;
                 w = 1;
             } else {
-                tscroll = (tscroll & 0x8FFF) | (((uint16_t) data & 0x07) << 12);
-                tscroll = (tscroll & 0xFC1F) | (((uint16_t) data & 0xF8) << 2);
+                t = (t & 0x8FFF) | (((uint16_t) data & 0x07) << 12);
+                t = (t & 0xFC1F) | (((uint16_t) data & 0xF8) << 2);
                 w = 0;
             }
             
@@ -246,19 +289,19 @@ uint8_t PPU::ppuread(uint16_t address) {
                 }
 
                 if (address >= 0x2800 && address < 0x2c00) {
-                   address -= 0x400;
+                    address -= 0x400;
                 }
-                
+
                 if (address >= 0x2c00 && address < 0x3000) {
-                  address -= 0x800;
+                    address -= 0x800;
                 }
             //Vertical
             } else {
                 if (address >= 0x2800 && address < 0x3000) {
-                   address -= 0x800;
+                    address -= 0x800;
                 }
             }
-            
+        
             return vram[address - 0x2000];
             break;
         case 0x3000 ... 0x3EFF:
@@ -283,16 +326,16 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
                 }
 
                 if (address >= 0x2800 && address < 0x2c00) {
-                   address -= 0x400;
+                    address -= 0x400;
                 }
-                
+
                 if (address >= 0x2c00 && address < 0x3000) {
-                  address -= 0x800;
+                    address -= 0x800;
                 }
             //Vertical
             } else {
                 if (address >= 0x2800 && address < 0x3000) {
-                   address -= 0x800;
+                    address -= 0x800;
                 }
             }
 

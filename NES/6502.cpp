@@ -2,17 +2,16 @@
 #include <assert.h>
 
 void CPU6502::step() {
+    if (ppu->genNMI()) {
+        NMI();
+        cycle = 0;
+    }
     //LOG_PC();
     uint8_t instruction = fetchInstruction();
     executeInstruction(instruction);
     //LOG_CPU_STATE();
     //PRINT_LOG();
     programCounter++;
-    
-    if (ppu->genNMI()) {
-        NMI();
-        cycle = 0;
-    }
 }
 
 void CPU6502::startup() {
@@ -99,6 +98,7 @@ inline void CPU6502::NMI() {
     pushStack(statusRegister);
     uint8_t lsb = *read(0xFFFA);
     uint8_t msb = *read(0xFFFB);
+    tick();
     programCounter = msb * 256 + lsb;
 }
 

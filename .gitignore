@@ -1,1 +1,3 @@
 NES/roms/*
+NES/test/instr_test-v5/*
+NES/test/ppu/*
