@@ -36,6 +36,7 @@ public:
     void printHeader();
     void loadTestProgramcode(std::vector<uint8_t>);
     int getMirroring();
+    
     //cpu address space
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);

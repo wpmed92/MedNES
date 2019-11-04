@@ -152,6 +152,8 @@ inline void PPU::emitPixel() {
 }
 
 void PPU::printNametable() {
+    v = tscroll;
+    
     if (isRenderingDisabled()) {
         return;
     }
@@ -160,10 +162,10 @@ void PPU::printNametable() {
         for (int j = 0; j < 32; j++) {
             int index = i * 32 + j;
             uint8_t nbyte = ppuread(0x2000 | index);
+            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) ;
+            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) | 8;
             
-            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4);
-            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) + 8;
-            
+            //xIncrement();
             for (int k = 0; k < 8; k++) {
                 uint8_t sliverlo = ppuread(lo);
                 uint8_t sliverhigh = ppuread(high);
@@ -299,7 +301,7 @@ uint8_t PPU::ppuread(uint16_t address) {
                     address -= 0x800;
                 }
             }
-
+        
             return vram[address - 0x2000];
             break;
         case 0x3000 ... 0x3EFF:
