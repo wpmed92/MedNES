@@ -8,9 +8,10 @@ int main(int argc, char ** argv) {
     }
     
     SDL_Window *window;
-
+    std::string window_title = "MedNES";
+    
     window = SDL_CreateWindow(
-        "MedNES",                  // window title
+        window_title.c_str(),                  // window title
         SDL_WINDOWPOS_UNDEFINED,           // initial x position
         SDL_WINDOWPOS_UNDEFINED,           // initial y position
         512,                               // width, in pixels
@@ -30,7 +31,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Antarctic Adventure.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -40,42 +41,40 @@ int main(int argc, char ** argv) {
 
     //For perf
     int nmiCounter = 0;
-    int cycleCounter = 0;
+    float duration = 0;
     auto t1 = std::chrono::high_resolution_clock::now();
     
     while (is_running) {
         cpu.step();
-
-        if (controller.shouldPoll) {
-            std::string buttonState = "";
-            
+        
+        if (ppu.generateFrame) {
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
                         switch(event.key.keysym.sym) {
                             case SDLK_a:
-                                buttonState += "a";
+                                controller.setButtonPressed(0);
                                 break;
                             case SDLK_b:
-                                buttonState += "b";
+                                controller.setButtonPressed(1);
                                 break;
                             case SDLK_SPACE:
-                                buttonState += "2";
+                                controller.setButtonPressed(2);
                                 break;
                             case SDLK_RETURN:
-                                buttonState += "3";
+                                controller.setButtonPressed(3);
                                 break;
                             case SDLK_UP:
-                                buttonState += "u";
+                                controller.setButtonPressed(4);
                                 break;
                             case SDLK_DOWN:
-                                buttonState += "d";
+                                controller.setButtonPressed(5);
                                 break;
                             case SDLK_LEFT:
-                                buttonState += "l";
+                                controller.setButtonPressed(6);
                                 break;
                             case SDLK_RIGHT:
-                                buttonState += "r";
+                                controller.setButtonPressed(7);
                                 break;
                             default:
                                 break;
@@ -91,10 +90,19 @@ int main(int argc, char ** argv) {
                 }
             }
             
-            controller.setButtonState(buttonState);
-        }
-        
-        if (ppu.generateFrame) {
+            nmiCounter++;
+            auto t2 = std::chrono::high_resolution_clock::now();
+            duration += std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+            t1 = std::chrono::high_resolution_clock::now();
+            
+            if (nmiCounter == 60) {
+                float avgFps = 1000/(duration/nmiCounter);
+                std::string fpsTitle = window_title + " (FPS: " + std::to_string((int) avgFps) + ")";
+                SDL_SetWindowTitle(window, fpsTitle.c_str());
+                nmiCounter = 0;
+                duration = 0;
+            }
+            
             ppu.generateFrame = false;
             Uint32 * pixels = new Uint32[256 * 240];
             
@@ -117,8 +125,6 @@ int main(int argc, char ** argv) {
     SDL_Delay(3000);
 
     SDL_DestroyWindow(window);
-    /*CPUTest cpuTest;
-    cpuTest.runTest("/users/wpmed92/Desktop/NES/test/nestest.nes", "/users/wpmed92/Desktop/NES/test/nestest.log");*/
     
     return 0;
 }
