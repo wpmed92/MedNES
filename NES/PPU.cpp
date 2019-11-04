@@ -2,43 +2,51 @@
 #include <iostream>
 
 void PPU::tick() {
-     if ((scanLine >= 0 && scanLine <= 239) || scanLine == 261) { //visible scanline
+     if ((scanLine >= 0 && scanLine <= 239) || scanLine == 261) { //visible scanline, pre-render scanline
         if (scanLine == 261) {
+            //clear vbl flag
             if (dot == 1) {
                 ppustatus &= ~0x80;
             }
             
+            //skip dot on odd frame
             if (odd && !isRenderingDisabled() && dot == 339) {
                 dot = 0;
                 scanLine = 0;
                 tick();
             }
             
+            //copy vertical bits
             if (!isRenderingDisabled() && dot >= 280 && dot <= 304) {
                 v = (v & ~0x7BE0) | (t & 0x7BE0);
             }
         }
     
+        //main hook: fetch tiles, emit pixel, shift
         if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
             if (!isRenderingDisabled()) {
                 if (dot == 257) {
                     copyHorizontalBits();
                 }
-            
+                
+                //if on visible scanlines and dots, emit pixel
                 if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
                     emitPixel();
                 }
                 
-                fetchTiles();
-                
+                //reload shift registers and shift
                 if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
                     if (dot % 8 == 1) {
                         shiftReg1 |= patternlow;
                         shiftReg2 |= patternhigh;
                     }
+                    
                     shiftReg1 <<= 1;
                     shiftReg2 <<= 1;
                 }
+                
+                //fetch nt, patter low, high
+                fetchTiles();
             }
         }
     } else if (scanLine >= 240 && scanLine <= 260) { //post-render, vblank
@@ -48,8 +56,10 @@ void PPU::tick() {
         }
         
         if (scanLine == 241 && dot == 1) {
+            //set vbl flag
             ppustatus |= 0x80;
 
+            //flag for nmi
             if (ppuctrl & 0x80) {
                 nmiOccured = true;
             }

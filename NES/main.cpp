@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -38,25 +38,64 @@ int main(int argc, char ** argv) {
     cpu.startup();
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
 
+    //For perf
     int nmiCounter = 0;
+    int cycleCounter = 0;
+    auto t1 = std::chrono::high_resolution_clock::now();
     
     while (is_running) {
         cpu.step();
-        
-        if (ppu.generateFrame) {
-            nmiCounter++;
-            
-            if (nmiCounter == 15) {
+
+        if (controller.shouldPoll) {
+                std::string buttonState = "";
+                
                 while (SDL_PollEvent(&event)) {
-                    if (event.type == SDL_QUIT) {
-                        is_running = false;
+                    switch (event.type) {
+                        case SDL_KEYDOWN:
+                            switch(event.key.keysym.sym) {
+                                case SDLK_a:
+                                    buttonState += "a";
+                                    break;
+                                case SDLK_b:
+                                    buttonState += "b";
+                                    break;
+                                case SDLK_SPACE:
+                                    buttonState += "2";
+                                    break;
+                                case SDLK_RETURN:
+                                    buttonState += "3";
+                                    break;
+                                case SDLK_UP:
+                                    buttonState += "u";
+                                    break;
+                                case SDLK_DOWN:
+                                    buttonState += "d";
+                                    break;
+                                case SDLK_LEFT:
+                                    buttonState += "l";
+                                    break;
+                                case SDLK_RIGHT:
+                                    buttonState += "r";
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        //SDL_QUIT event (window close)
+                        case SDL_QUIT:
+                            is_running = false;
+                            break;
+
+                        default:
+                            break;
                     }
                 }
                 
-                nmiCounter = 0;
-            }
-            
-            //ppu.scanliningDebug();
+                controller.setButtonState(buttonState);
+        }
+        
+        
+        if (ppu.generateFrame) {
             ppu.generateFrame = false;
             Uint32 * pixels = new Uint32[256 * 240];
             
