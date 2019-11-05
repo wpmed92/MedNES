@@ -39,11 +39,6 @@ void PPU::tick() {
                     if (dot % 8 == 1) {
                         bgShiftRegLo |= patternlow;
                         bgShiftRegHi |= patternhigh;
-                        uint8_t quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
-                        uint8_t attr_bits1 = (attrbyte >> quadrant_num) & 1;
-                        uint8_t attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
-                        attrShiftReg1 |= attr_bits1 ? 255 : 0;
-                        attrShiftReg2 |= attr_bits2 ? 255 : 0;
                     }
                     
                     bgShiftRegLo <<= 1;
@@ -143,6 +138,12 @@ inline void PPU::fetchTiles() {
     }
     
     if (dot % 8 == 0) {
+        uint8_t quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
+        uint8_t attr_bits1 = (attrbyte >> quadrant_num) & 1;
+        uint8_t attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
+        attrShiftReg1 |= attr_bits1 ? 255 : 0;
+        attrShiftReg2 |= attr_bits2 ? 255 : 0;
+        
         if (dot == 256) {
             xIncrement();
             yIncrement();
@@ -321,6 +322,19 @@ uint8_t PPU::ppuread(uint16_t address) {
         case 0x3F00 ... 0x3F0F:
             return bg_palette[address - 0x3F00];
             break;
+        case 0x3F10 ... 0x3F1F:
+            if (address == 0x3F10) {
+                return bg_palette[0];
+            } else if (address == 0x3F14) {
+                return bg_palette[4];
+            } else if (address == 0x3F18) {
+                return bg_palette[8];
+            } else if (address == 0x3F1C) {
+                return bg_palette[12];
+            }
+            
+            return 1;
+            break;
         case 0x3000 ... 0x3EFF:
             return ppuread(address - 0x1000);
             break;
@@ -360,6 +374,18 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             break;
         case 0x3F00 ... 0x3F0F:
             bg_palette[address - 0x3F00] = data;
+            break;
+        case 0x3F10 ... 0x3F1F:
+            if (address == 0x3F10) {
+                bg_palette[0] = data;
+            } else if (address == 0x3F14) {
+                bg_palette[4] = data;
+            } else if (address == 0x3F18) {
+                bg_palette[8] = data;
+            } else if (address == 0x3F1C) {
+                bg_palette[12] = data;
+            }
+            
             break;
         case 0x3000 ... 0x3EFF:
             ppuwrite(address - 0x1000, data);
