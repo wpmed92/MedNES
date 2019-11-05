@@ -31,7 +31,3 @@ void Controller::write(uint16_t address, uint8_t data) {
 void Controller::setButtonPressed(int button) {
     shifter |= 1 << button;
 }
-                            
-void Controller::resetButtonState() {
-   shifter = 0;
-}

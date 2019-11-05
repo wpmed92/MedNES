@@ -31,7 +31,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Antarctic Adventure.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -48,6 +48,7 @@ int main(int argc, char ** argv) {
         cpu.step();
         
         if (ppu.generateFrame) {
+            //Read controller input
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
@@ -90,12 +91,13 @@ int main(int argc, char ** argv) {
                 }
             }
             
+            //Measure fps
             nmiCounter++;
             auto t2 = std::chrono::high_resolution_clock::now();
             duration += std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
             t1 = std::chrono::high_resolution_clock::now();
             
-            if (nmiCounter == 60) {
+            if (nmiCounter == 10) {
                 float avgFps = 1000/(duration/nmiCounter);
                 std::string fpsTitle = window_title + " (FPS: " + std::to_string((int) avgFps) + ")";
                 SDL_SetWindowTitle(window, fpsTitle.c_str());
@@ -103,22 +105,13 @@ int main(int argc, char ** argv) {
                 duration = 0;
             }
             
+            //Draw frame
             ppu.generateFrame = false;
-            Uint32 * pixels = new Uint32[256 * 240];
-            
-            for (int i = 0; i < 240; i++) {
-                for (int j = 0; j < 256; j++) {
-                    uint8_t color = ppu.frame[i*256+j] * 64;
-                    pixels[i*256+j] = 255 << 24 | color << 16 | color << 8 | color;
-                }
-            }
-            
             SDL_RenderSetScale(s, 2, 2);
-            SDL_UpdateTexture(texture, NULL, pixels, 256 * sizeof(Uint32));
+            SDL_UpdateTexture(texture, NULL, ppu.buffer, 256 * sizeof(Uint32));
             SDL_RenderClear(s);
             SDL_RenderCopy(s, texture, NULL, NULL);
             SDL_RenderPresent(s);
-            delete[] pixels;
         }
     }
 

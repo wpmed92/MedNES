@@ -37,12 +37,19 @@ void PPU::tick() {
                 //reload shift registers and shift
                 if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
                     if (dot % 8 == 1) {
-                        shiftReg1 |= patternlow;
-                        shiftReg2 |= patternhigh;
+                        bgShiftRegLo |= patternlow;
+                        bgShiftRegHi |= patternhigh;
+                        uint8_t quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
+                        uint8_t attr_bits1 = (attrbyte >> quadrant_num) & 1;
+                        uint8_t attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
+                        attrShiftReg1 |= attr_bits1 ? 255 : 0;
+                        attrShiftReg2 |= attr_bits2 ? 255 : 0;
                     }
                     
-                    shiftReg1 <<= 1;
-                    shiftReg2 <<= 1;
+                    bgShiftRegLo <<= 1;
+                    bgShiftRegHi <<= 1;
+                    attrShiftReg1 <<= 1;
+                    attrShiftReg2 <<= 1;
                 }
                 
                 //fetch nt, patter low, high
@@ -116,7 +123,7 @@ inline void PPU::fetchTiles() {
     }
     
     if (dot % 8 == 3) {
-        attrbyte = 0;
+        attrbyte = ppuread(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
     }
     
     if (dot % 8 == 5) {
@@ -146,9 +153,16 @@ inline void PPU::fetchTiles() {
 }
 
 inline void PPU::emitPixel() {
-    uint16_t pixel1 = shiftReg1 & 0x8000;
-    uint16_t pixel2 = shiftReg2 & 0x8000;
-    frame[pixelIndex++] = (pixel2 >> 14) + (pixel1 >> 15);
+    uint16_t pixel1 = bgShiftRegLo & 0x8000;
+    uint16_t pixel2 = bgShiftRegHi & 0x8000;
+    uint16_t pixel3 = attrShiftReg1 & 0x8000;
+    uint16_t pixel4 = attrShiftReg2 & 0x8000;
+    uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
+    uint8_t p = bg_palette[paletteIndex] * 3;
+    uint8_t r = palette[p];
+    uint8_t g = palette[p + 1];
+    uint8_t b = palette[p + 2];
+    buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
 }
 
 void PPU::printNametable() {
@@ -177,7 +191,7 @@ void PPU::printNametable() {
                     uint8_t pixelhi = sliverhigh & 128;
                     uint8_t pixel = (pixelhi >> 6) | (pixello >> 7);
                     int frami = (i*8+k)*256+(j*8+l);
-                    frame[frami] = pixel;
+                    //frame[frami] = pixel;
                     sliverlo <<= 1;
                     sliverhigh <<= 1;
                 }
@@ -304,6 +318,9 @@ uint8_t PPU::ppuread(uint16_t address) {
         
             return vram[address - 0x2000];
             break;
+        case 0x3F00 ... 0x3F0F:
+            return bg_palette[address - 0x3F00];
+            break;
         case 0x3000 ... 0x3EFF:
             return ppuread(address - 0x1000);
             break;
@@ -340,6 +357,9 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             }
 
             vram[address - 0x2000] = data;
+            break;
+        case 0x3F00 ... 0x3F0F:
+            bg_palette[address - 0x3F00] = data;
             break;
         case 0x3000 ... 0x3EFF:
             ppuwrite(address - 0x1000, data);

@@ -18,7 +18,6 @@ public:
     
     //Input
     void setButtonPressed(int);
-    void resetButtonState();
     
 };
 #endif /* Controller_hpp */
