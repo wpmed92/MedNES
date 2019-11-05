@@ -9,6 +9,7 @@ int main(int argc, char ** argv) {
     
     SDL_Window *window;
     std::string window_title = "MedNES";
+    bool headlessMode = false;
     
     window = SDL_CreateWindow(
         window_title.c_str(),                  // window title
@@ -28,15 +29,15 @@ int main(int argc, char ** argv) {
     
     SDL_Event event;
     // We create a renderer with hardware acceleration, we also present according with the vertical sync refresh.
-    SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
+    SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
     CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
-    cpu.startup();
+    cpu.reset();
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
 
     //For perf

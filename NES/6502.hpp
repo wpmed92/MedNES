@@ -72,7 +72,6 @@ private:
     
     //vectors
     inline void irq();
-    inline void reset();
     inline void NMI();
     
     inline void LOG_EXEC(uint8_t instr);
@@ -335,8 +334,8 @@ public:
     uint8_t* read(uint16_t);
     void write(uint16_t, uint8_t);
     void run();
-    void startup();
     void step();
+    void reset();
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();
 };

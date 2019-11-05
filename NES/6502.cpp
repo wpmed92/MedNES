@@ -14,10 +14,6 @@ void CPU6502::step() {
     programCounter++;
 }
 
-void CPU6502::startup() {
-    reset();
-}
-
 inline void CPU6502::tick() {
     ppu->tick();
     ppu->tick();
@@ -79,7 +75,7 @@ inline void CPU6502::pushPC() {
 }
 
 //Interupts
-inline void CPU6502::reset() {
+void CPU6502::reset() {
     //init program counter = $FFFC, $FFFD
     programCounter = *read(0xFFFD) * 256 + *read(0xFFFC);
 }
