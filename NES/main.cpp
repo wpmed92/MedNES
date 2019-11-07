@@ -8,9 +8,11 @@ int main(int argc, char ** argv) {
     }
     
     SDL_Window *window;
-
+    std::string window_title = "MedNES";
+    bool headlessMode = false;
+    
     window = SDL_CreateWindow(
-        "MedNES",                  // window title
+        window_title.c_str(),                  // window title
         SDL_WINDOWPOS_UNDEFINED,           // initial x position
         SDL_WINDOWPOS_UNDEFINED,           // initial y position
         512,                               // width, in pixels
@@ -27,55 +29,54 @@ int main(int argc, char ** argv) {
     
     SDL_Event event;
     // We create a renderer with hardware acceleration, we also present according with the vertical sync refresh.
-    SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) ;
+    SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/scanline.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
     CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
-    cpu.startup();
+    cpu.reset();
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
 
     //For perf
     int nmiCounter = 0;
-    int cycleCounter = 0;
+    float duration = 0;
     auto t1 = std::chrono::high_resolution_clock::now();
     
     while (is_running) {
         cpu.step();
-
-        if (controller.shouldPoll) {
-            std::string buttonState = "";
-            
+        
+        if (ppu.generateFrame) {
+            //Read controller input
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
                         switch(event.key.keysym.sym) {
                             case SDLK_a:
-                                buttonState += "a";
+                                controller.setButtonPressed(0);
                                 break;
                             case SDLK_b:
-                                buttonState += "b";
+                                controller.setButtonPressed(1);
                                 break;
                             case SDLK_SPACE:
-                                buttonState += "2";
+                                controller.setButtonPressed(2);
                                 break;
                             case SDLK_RETURN:
-                                buttonState += "3";
+                                controller.setButtonPressed(3);
                                 break;
                             case SDLK_UP:
-                                buttonState += "u";
+                                controller.setButtonPressed(4);
                                 break;
                             case SDLK_DOWN:
-                                buttonState += "d";
+                                controller.setButtonPressed(5);
                                 break;
                             case SDLK_LEFT:
-                                buttonState += "l";
+                                controller.setButtonPressed(6);
                                 break;
                             case SDLK_RIGHT:
-                                buttonState += "r";
+                                controller.setButtonPressed(7);
                                 break;
                             default:
                                 break;
@@ -91,34 +92,33 @@ int main(int argc, char ** argv) {
                 }
             }
             
-            controller.setButtonState(buttonState);
-        }
-        
-        if (ppu.generateFrame) {
-            ppu.generateFrame = false;
-            Uint32 * pixels = new Uint32[256 * 240];
+            //Measure fps
+            nmiCounter++;
+            auto t2 = std::chrono::high_resolution_clock::now();
+            duration += std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+            t1 = std::chrono::high_resolution_clock::now();
             
-            for (int i = 0; i < 240; i++) {
-                for (int j = 0; j < 256; j++) {
-                    uint8_t color = ppu.frame[i*256+j] * 64;
-                    pixels[i*256+j] = 255 << 24 | color << 16 | color << 8 | color;
-                }
+            if (nmiCounter == 10) {
+                float avgFps = 1000/(duration/nmiCounter);
+                std::string fpsTitle = window_title + " (FPS: " + std::to_string((int) avgFps) + ")";
+                SDL_SetWindowTitle(window, fpsTitle.c_str());
+                nmiCounter = 0;
+                duration = 0;
             }
             
+            //Draw frame
+            ppu.generateFrame = false;
             SDL_RenderSetScale(s, 2, 2);
-            SDL_UpdateTexture(texture, NULL, pixels, 256 * sizeof(Uint32));
+            SDL_UpdateTexture(texture, NULL, ppu.buffer, 256 * sizeof(Uint32));
             SDL_RenderClear(s);
             SDL_RenderCopy(s, texture, NULL, NULL);
             SDL_RenderPresent(s);
-            delete[] pixels;
         }
     }
 
     SDL_Delay(3000);
 
     SDL_DestroyWindow(window);
-    /*CPUTest cpuTest;
-    cpuTest.runTest("/users/wpmed92/Desktop/NES/test/nestest.nes", "/users/wpmed92/Desktop/NES/test/nestest.log");*/
     
     return 0;
 }

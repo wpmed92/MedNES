@@ -12,9 +12,10 @@ uint8_t* Controller::read(uint16_t address) {
     if (address == 0x4016) {
         JOY1 = shifter & 1;
         shifter >>= 1;
+        
         return &JOY1;
     } else {
-        //Unimplemented
+        //TODO: Implement JOY2
         return &JOY2;
     }
 }
@@ -22,51 +23,11 @@ uint8_t* Controller::read(uint16_t address) {
 void Controller::write(uint16_t address, uint8_t data) {
     if (address == 0x4016) {
         shouldPoll = data;
-        JOY1 = data;
     } else {
-        JOY2 = data;
+        //TODO: Implement JOY2
     }
 }
 
-void Controller::setButtonState(std::string buttons) {
-    for (int i = 0; i < buttons.length(); i++) {
-        switch(buttons[i]) {
-            case 'a':
-                shifter |= 1;
-                break;
-            
-            case 'b':
-                shifter |= 2;
-                break;
-                
-            case '2': //select
-                shifter |= 4;
-                break;
-                
-            case '3': //start
-                shifter |= 8;
-                break;
-                
-            case 'u':
-                shifter |= 16;
-                break;
-                
-            case 'd':
-                shifter |= 32;
-                break;
-                
-            case 'l':
-                shifter |= 64;
-                break;
-                
-            case 'r':
-                shifter |= 128;
-                break;
-            
-        }
-    }
-}
-                            
-void Controller::resetButtonState() {
-   shifter = 0;
+void Controller::setButtonPressed(int button) {
+    shifter |= 1 << button;
 }

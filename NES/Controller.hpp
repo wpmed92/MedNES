@@ -17,8 +17,7 @@ public:
     void write(uint16_t address, uint8_t data);
     
     //Input
-    void setButtonState(std::string);
-    void resetButtonState();
+    void setButtonPressed(int);
     
 };
 #endif /* Controller_hpp */
