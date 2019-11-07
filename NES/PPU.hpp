@@ -68,6 +68,7 @@ private:
     bool odd = false;
     bool nmiOccured = false;
     inline void copyHorizontalBits();
+    inline void copyVerticalBits();
     inline bool isRenderingDisabled();
     inline void emitPixel();
     inline void loadRegisters();

@@ -10,15 +10,15 @@ void PPU::tick() {
             }
             
             //skip dot on odd frame
-            if (odd && !isRenderingDisabled() && dot == 339) {
+            /*if (odd && !isRenderingDisabled() && dot == 339) {
                 dot = 0;
                 scanLine = 0;
                 tick();
-            }
+            }*/
             
             //copy vertical bits
             if (!isRenderingDisabled() && dot >= 280 && dot <= 304) {
-                v = (v & ~0x7BE0) | (t & 0x7BE0);
+                copyVerticalBits();
             }
         }
     
@@ -29,10 +29,6 @@ void PPU::tick() {
                     copyHorizontalBits();
                 }
                 
-                //if on visible scanlines and dots, emit pixel
-                if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
-                    emitPixel();
-                }
                 
                 //reload shift registers and shift
                 if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
@@ -45,6 +41,12 @@ void PPU::tick() {
                     bgShiftRegHi <<= 1;
                     attrShiftReg1 <<= 1;
                     attrShiftReg2 <<= 1;
+                }
+
+                
+                //if on visible scanlines and dots, emit pixel
+                if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
+                    emitPixel();
                 }
                 
                 //fetch nt, patter low, high
@@ -160,6 +162,7 @@ inline void PPU::emitPixel() {
     uint16_t pixel4 = attrShiftReg2 & 0x8000;
     uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
     
+    //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
@@ -208,6 +211,10 @@ void PPU::printNametable() {
 
 inline void PPU::copyHorizontalBits() {
     v = (v & ~0x41F) | (t & 0x41F);
+}
+
+inline void PPU::copyVerticalBits() {
+    v = (v & ~0x7BE0) | (t & 0x7BE0);
 }
 
 bool PPU::genNMI() {
@@ -333,7 +340,7 @@ uint8_t PPU::ppuread(uint16_t address) {
             break;
         case 0x3F10 ... 0x3F1F:
             if (address == 0x3F10 || address == 0x3F14 || address == 0x3F18 || address == 0x3F1C) {
-                return bg_palette[0];
+                return ppuread(address & 0x3F0F);
             }
             
             return 1;
@@ -376,15 +383,17 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             vram[address - 0x2000] = data;
             break;
         case 0x3F00 ... 0x3F0F:
-            if (address == 0x3F04 || address == 0x3F08 || address == 0x3F0C) {
-                address = 0x3F00;
-            }
-            
             bg_palette[address - 0x3F00] = data;
             break;
         case 0x3F10 ... 0x3F1F:
-            if (address == 0x3F10 || address == 0x3F14 || address == 0x3F18 || address == 0x3F1C) {
+            if (address == 0x3F10) {
                 bg_palette[0] = data;
+            } else if (address == 0x3F14) {
+                bg_palette[4] = data;
+            } else if (address == 0x3F18) {
+                bg_palette[8] = data;
+            } else if (address == 0x3F1C) {
+                bg_palette[12] = data;
             }
             
             break;
