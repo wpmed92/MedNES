@@ -38,7 +38,7 @@ private:
     uint8_t vram[2048] = { 0 };
     
     //current vram address, temporary vram address
-    uint16_t v = 0, t = 0, tscroll = 0;
+    uint16_t v = 0, t = 0;
     
     //fine x scroll
     uint8_t x = 0;
@@ -54,19 +54,23 @@ private:
     uint16_t attrShiftReg2;
     
     //Object Attribute Memory
-    uint8_t oamdma; //$4014
-    
+    int primaryOAMCursor = 0;
+    int secondaryOAMCursor = 0;
     OAM primaryOAM[64];
-    
     OAM secondaryOAM[8];
+    OAM tmpOAM;
+    bool inRange = false;
+    int inRangeCycles = 8;
     
     ROM* rom;
     
     //Scanline
     int scanLine = 0;
     int pixelIndex = 0;
+    int testCounter = 0;
     bool odd = false;
     bool nmiOccured = false;
+    bool shouldSupressNMI = false;
     inline void copyHorizontalBits();
     inline void copyVerticalBits();
     inline bool isRenderingDisabled();
@@ -75,6 +79,10 @@ private:
     inline void fetchTiles();
     inline void xIncrement();
     inline void yIncrement();
+    inline void reloadShiftersAndShift();
+    bool inNMISupressInterval();
+    bool inVBlank();
+    void evalSprites();
     
 public:
     
@@ -93,8 +101,7 @@ public:
     bool genNMI();
     void drawFrame();
     bool generateFrame;
-    void printNametable();
-    void scanliningDebug();
+    void printState();
     uint32_t buffer[256*240] = { 0 };
 };
 

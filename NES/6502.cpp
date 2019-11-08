@@ -495,8 +495,7 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
                 
                 for (int i = 0; i < 0xFF; i++) {
                     tick();
-                    tick();
-                    //ppu->copyOAM(*read(data * 256 + i), i);
+                    ppu->copyOAM(*read(data * 256 + i), i);
                 }
             }
         } else {
@@ -688,14 +687,15 @@ void CPU6502::BIT(std::function<uint16_t()> addressing) {
 }
 
 void CPU6502::BRK() {
+    programCounter++;
     pushPC();
     uint8_t statusRegCpy = statusRegister;
     statusRegCpy |= (1 << 4);
-    statusRegCpy |= (1 << 5);
+    //statusRegCpy |= (1 << 5);
     pushStack(statusRegCpy);
     uint8_t lsb = *read(0xFFFE);
     uint8_t msb = *read(0xFFFF);
-    programCounter = msb * 256 + lsb;
+    programCounter = msb * 256 + lsb - 1;
 }
 
 void CPU6502::CLC() {
@@ -987,6 +987,8 @@ void CPU6502::RTI() {
     uint8_t pcMsb = popStack();
     programCounter = pcMsb * 256 + pcLsb - 1;
     tick(); tick();
+    std::cout << "RTI: new pc=" << unsigned(programCounter) << std::endl;
+    ppu->printState();
 }
 
 void CPU6502::RTS() {

@@ -4,54 +4,42 @@
 void PPU::tick() {
      if ((scanLine >= 0 && scanLine <= 239) || scanLine == 261) { //visible scanline, pre-render scanline
         if (scanLine == 261) {
-            //clear vbl flag
+            //clear vbl flag and sprite overflow
             if (dot == 1) {
                 ppustatus &= ~0x80;
+                ppustatus &= ~0x20;
             }
             
-            //skip dot on odd frame
-            /*if (odd && !isRenderingDisabled() && dot == 339) {
-                dot = 0;
-                scanLine = 0;
-                tick();
-            }*/
-            
             //copy vertical bits
-            if (!isRenderingDisabled() && dot >= 280 && dot <= 304) {
+            if (dot > 280 && dot < 304) {
                 copyVerticalBits();
             }
         }
     
         //main hook: fetch tiles, emit pixel, shift
         if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
-            if (!isRenderingDisabled()) {
-                if (dot == 257) {
-                    copyHorizontalBits();
-                }
+            if (dot == 257) {
+                copyHorizontalBits();
+            }
+            
+            //reload shift registers and shift
+            if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
+                reloadShiftersAndShift();
+            }
+            
+            //if on visible scanlines and dots
+            //eval sprites
+            //emit pixels
+            if ((scanLine >= 0 && scanLine <= 239)) {
+                evalSprites();
                 
-                
-                //reload shift registers and shift
-                if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
-                    if (dot % 8 == 1) {
-                        bgShiftRegLo |= patternlow;
-                        bgShiftRegHi |= patternhigh;
-                    }
-                    
-                    bgShiftRegLo <<= 1;
-                    bgShiftRegHi <<= 1;
-                    attrShiftReg1 <<= 1;
-                    attrShiftReg2 <<= 1;
-                }
-
-                
-                //if on visible scanlines and dots, emit pixel
-                if ((scanLine >= 0 && scanLine <= 239) && (dot >= 1 && dot <= 256)) {
+                if (dot >= 1 && dot <= 256) {
                     emitPixel();
                 }
-                
-                //fetch nt, patter low, high
-                fetchTiles();
             }
+            
+            //fetch nt, at, pattern low - high
+            fetchTiles();
         }
     } else if (scanLine >= 240 && scanLine <= 260) { //post-render, vblank
         if (scanLine == 240 && dot == 0) {
@@ -68,6 +56,11 @@ void PPU::tick() {
                 nmiOccured = true;
             }
         }
+    }
+
+    //skip dot on odd frame
+    if (odd && !isRenderingDisabled() && dot == 339 && scanLine == 261) {
+        dot++;
     }
     
     if (dot == 340) {
@@ -110,11 +103,31 @@ inline void PPU::yIncrement() {
   }
 }
 
+inline void PPU::reloadShiftersAndShift() {
+    if (isRenderingDisabled()) {
+        return;
+    }
+    
+    if (dot % 8 == 1) {
+        bgShiftRegLo |= patternlow;
+        bgShiftRegHi |= patternhigh;
+    }
+    
+    bgShiftRegLo <<= 1;
+    bgShiftRegHi <<= 1;
+    attrShiftReg1 <<= 1;
+    attrShiftReg2 <<= 1;
+}
+
 inline bool PPU::isRenderingDisabled() {
     return !((ppumask & 8) || (ppumask & 16));
 }
 
 inline void PPU::fetchTiles() {
+    if (isRenderingDisabled()) {
+        return;
+    }
+    
     if (dot % 8 == 1) {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
     }
@@ -147,8 +160,8 @@ inline void PPU::fetchTiles() {
         attrShiftReg2 |= attr_bits2 ? 255 : 0;
         
         if (dot == 256) {
-            xIncrement();
             yIncrement();
+            xIncrement();
         } else {
             xIncrement();
         }
@@ -156,10 +169,15 @@ inline void PPU::fetchTiles() {
 }
 
 inline void PPU::emitPixel() {
-    uint16_t pixel1 = bgShiftRegLo & 0x8000;
-    uint16_t pixel2 = bgShiftRegHi & 0x8000;
-    uint16_t pixel3 = attrShiftReg1 & 0x8000;
-    uint16_t pixel4 = attrShiftReg2 & 0x8000;
+    if (isRenderingDisabled()) {
+        return;
+    }
+    
+    uint16_t fineSelect = 0x8000 >> x;
+    uint16_t pixel1 = (bgShiftRegLo & fineSelect) << x;
+    uint16_t pixel2 = (bgShiftRegHi & fineSelect) << x;
+    uint16_t pixel3 = (attrShiftReg1 & fineSelect) << x;
+    uint16_t pixel4 = (attrShiftReg2 & fineSelect) << x;
     uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
     
     //When bg rendering is off
@@ -174,51 +192,25 @@ inline void PPU::emitPixel() {
     buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
 }
 
-void PPU::printNametable() {
-    v = tscroll;
-    
+inline void PPU::copyHorizontalBits() {
     if (isRenderingDisabled()) {
         return;
     }
     
-    for (int i = 0; i < 30; i++) {
-        for (int j = 0; j < 32; j++) {
-            int index = i * 32 + j;
-            uint8_t nbyte = ppuread(0x2000 | index);
-            uint16_t lo = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) ;
-            uint16_t high = ((ppuctrl & 16) << 8) | ((uint16_t) nbyte << 4) | 8;
-            
-            //xIncrement();
-            for (int k = 0; k < 8; k++) {
-                uint8_t sliverlo = ppuread(lo);
-                uint8_t sliverhigh = ppuread(high);
-                
-                lo++;
-                high++;
-                for (int l = 0; l < 8; l++) {
-                    uint8_t pixello = sliverlo & 128;
-                    uint8_t pixelhi = sliverhigh & 128;
-                    uint8_t pixel = (pixelhi >> 6) | (pixello >> 7);
-                    int frami = (i*8+k)*256+(j*8+l);
-                    //frame[frami] = pixel;
-                    sliverlo <<= 1;
-                    sliverhigh <<= 1;
-                }
-            }
-        }
-    }
-}
-
-inline void PPU::copyHorizontalBits() {
     v = (v & ~0x41F) | (t & 0x41F);
 }
 
 inline void PPU::copyVerticalBits() {
+    if (isRenderingDisabled()) {
+        return;
+    }
+    
     v = (v & ~0x7BE0) | (t & 0x7BE0);
 }
 
 bool PPU::genNMI() {
     if (nmiOccured == true) {
+        std::cout << "NMI occured: scanline=" << unsigned(scanLine) << ", dot=" << unsigned(dot) << std::endl;
         nmiOccured = false;
         return true;
     } else {
@@ -255,51 +247,56 @@ uint8_t* PPU::read(uint16_t address) {
 }
 
 void PPU::write(uint16_t address, uint8_t data) {
-    if (address == 0x4014) {
-        oamdma = data;
-    } else {
-        address %= 8;
-        
-        if (address == 0) {
-            t = (t & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
-            ppuctrl = data;
-        } else if (address == 1) {
-            ppumask = data;
-        } else if (address == 2) {
-            data &= ~128;
-            ppustatus &= 128;
-            ppustatus |= data;
-        } else if (address == 3) {
-            oamaddr = data;
-        } else if (address == 4) {
-            oamdata = data;
-        } else if (address == 5) {
-            if (w == 0) {
-                t = (t & 0xFFE0) | ((uint16_t) data >> 3);
-                x = data & 7;
-                w = 1;
-            } else {
-                t = (t & 0x8FFF) | (((uint16_t) data & 0x07) << 12);
-                t = (t & 0xFC1F) | (((uint16_t) data & 0xF8) << 2);
-                w = 0;
-            }
-            
-            ppuscroll = data;
-        } else if (address == 6) {
-            if (w == 0) {
-                t = (t & 0x80FF) | (((uint16_t)data & 0x3F) << 8);
-                w = 1;
-            } else {
-                t = (t & 0xFF00) | (uint16_t) data;
-                v = t;
-                w = 0;
-            }
-            
-        } else if (address == 7) {
-            ppuwrite(v, data);
-            v += ((ppuctrl & 4) ? 32 : 1);
-            v %= 16384;
+    address %= 8;
+    
+    if (address == 0) {
+        t = (t & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
+        ppuctrl = data;
+    } else if (address == 1) {
+        ppumask = data;
+    } else if (address == 2) {
+        data &= ~128;
+        ppustatus &= 128;
+        ppustatus |= data;
+    } else if (address == 3) {
+        oamaddr = data;
+    } else if (address == 4) {
+        oamdata = data;
+    } else if (address == 5) {
+        if (w == 0) {
+            t &= 0x7FE0;
+            t |= ((uint16_t) data) >> 3;
+            x = data & 7;
+            w = 1;
+        } else {
+            t &= ~0x73E0;
+            t |= ((uint16_t) data & 0x07) << 12;
+            t |= ((uint16_t) data & 0xF8) << 2;
+            w = 0;
         }
+        
+        ppuscroll = data;
+    } else if (address == 6) {
+        if (w == 0) {
+            t &= 255;
+            t |= ((uint16_t)data & 0x3F) << 8;
+            w = 1;
+        } else {
+            t &= 0xFF00;
+            t |= data;
+            v = t;
+            
+            if (!isRenderingDisabled() && !inVBlank()) {
+                std:: cout << "V set: " << unsigned(v);
+                printState();
+            }
+            
+            w = 0;
+        }
+    } else if (address == 7) {
+        ppuwrite(v, data);
+        v += ((ppuctrl & 4) ? 32 : 1);
+        v %= 16384;
     }
 }
 
@@ -418,4 +415,80 @@ void PPU::copyOAM(uint8_t oamEntry, int index) {
     } else {
         primaryOAM[oamSelect].spriteX = oamEntry;
     }
+}
+
+void PPU::evalSprites() {
+    if (isRenderingDisabled()) {
+        return;
+    }
+    
+    //clear secondary OAM
+    if (dot >= 1 && dot <= 64) {
+        if (dot == 1) {
+            secondaryOAMCursor = 0;
+        }
+        
+        secondaryOAM[secondaryOAMCursor].spriteAttr = 0xFF;
+        secondaryOAM[secondaryOAMCursor].spriteTileNum = 0xFF;
+        secondaryOAM[secondaryOAMCursor].spriteX = 0xFF;
+        secondaryOAM[secondaryOAMCursor].spriteY = 0xFF;
+        
+        if (dot % 8 == 0) {
+            secondaryOAMCursor++;
+        }
+    }
+    
+    //sprite eval
+    if (dot >= 65 && dot <= 256) {
+        if (dot == 65) {
+            secondaryOAMCursor = 0;
+            primaryOAMCursor = 0;
+        }
+        
+        //odd cycle read
+        if ((dot % 2) == 1) {
+            tmpOAM = primaryOAM[primaryOAMCursor];
+            
+            if (tmpOAM.spriteY == scanLine) {
+                inRangeCycles--;
+                inRange = true;
+            }
+        //even cycle write
+        } else {
+            //tmpOAM is in range, write it to secondaryOAM
+            if (inRange) {
+                inRangeCycles--;
+
+                //copying tmpOAM in range is 8 cycles, 2 cycles otherwise
+                if (inRangeCycles == 0) {
+                    primaryOAMCursor++;
+                    secondaryOAMCursor++;
+                    inRangeCycles = 8;
+                    inRange = false;
+                } else {
+                    if (secondaryOAMCursor == 8) {
+                        //Sprite overflow
+                        ppustatus |= 0x20;
+                    } else {
+                        secondaryOAM[secondaryOAMCursor] = tmpOAM;
+                    }
+                }
+            } else {
+                primaryOAMCursor = (primaryOAMCursor+1) % 64;
+            }
+        }
+    }
+    
+    //Sprite fetches
+    if (dot >= 257 && dot <= 320) {
+       
+    }
+}
+
+void PPU::printState() {
+    std::cout << "scanline=" << unsigned(scanLine) << ", " << unsigned(dot) << std::endl << std::endl;
+}
+
+bool PPU::inVBlank() {
+    return (scanLine >= 241 && scanLine <= 260);
 }
