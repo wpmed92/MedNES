@@ -94,8 +94,8 @@ inline void CPU6502::NMI() {
     pushStack(statusRegister);
     uint8_t lsb = *read(0xFFFA);
     uint8_t msb = *read(0xFFFB);
-    tick();
     programCounter = msb * 256 + lsb;
+    tick();
 }
 
 uint16_t CPU6502::immediate() {
@@ -108,8 +108,8 @@ uint16_t CPU6502::zeroPage() {
 }
 
 uint16_t CPU6502::zeroPageX() {
-    uint8_t zeroPage = *read(++programCounter);
     tick();
+    uint8_t zeroPage = *read(++programCounter);
     return (zeroPage + xRegister) % 256;
 }
 
@@ -151,11 +151,11 @@ uint16_t CPU6502::absoluteX(bool extraTick) {
 }
 
 uint16_t CPU6502::indirectX() {
+    tick();
     uint16_t operand = (*read(++programCounter) + xRegister) % 256;
     uint8_t lsb = *read(operand);
     uint8_t msb = *read((operand+1)%256);
     uint16_t address = msb * 256 + lsb;
-    tick();
     
     return address;
 }
@@ -514,7 +514,6 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
     
     tick();
 
-    
     return readData;
 }
 
@@ -688,6 +687,7 @@ void CPU6502::BIT(std::function<uint16_t()> addressing) {
 
 void CPU6502::BRK() {
     programCounter++;
+    programCounter++;
     pushPC();
     uint8_t statusRegCpy = statusRegister;
     statusRegCpy |= (1 << 4);
@@ -696,6 +696,7 @@ void CPU6502::BRK() {
     uint8_t lsb = *read(0xFFFE);
     uint8_t msb = *read(0xFFFF);
     programCounter = msb * 256 + lsb - 1;
+    tick();
 }
 
 void CPU6502::CLC() {
@@ -747,7 +748,6 @@ void CPU6502::CPY(std::function<uint16_t()> addressing) {
 
 void CPU6502::DEC(std::function<uint16_t()> addressing) {
     DEC(read(addressing()));
-    
 }
 
 void CPU6502::DEC(uint8_t* data) {
@@ -987,8 +987,6 @@ void CPU6502::RTI() {
     uint8_t pcMsb = popStack();
     programCounter = pcMsb * 256 + pcLsb - 1;
     tick(); tick();
-    std::cout << "RTI: new pc=" << unsigned(programCounter) << std::endl;
-    ppu->printState();
 }
 
 void CPU6502::RTS() {
