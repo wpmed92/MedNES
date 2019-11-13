@@ -6,10 +6,10 @@ void PPU::tick() {
         if (scanLine == 261) {
             //clear vbl flag and sprite overflow
             if (dot == 2) {
-
                 pixelIndex = 0;
                 ppustatus &= ~0x80;
                 ppustatus &= ~0x20;
+                ppustatus &= ~64;
             }
             
             //copy vertical bits
@@ -18,8 +18,15 @@ void PPU::tick() {
             }
         }
 
+         //skip dot on odd frame
+         if (odd && !isRenderingDisabled() && dot == 339 && scanLine == 261) {
+             scanLine = 0;
+             dot = 0;
+             tick();
+         }
+         
         if (scanLine >= 0 && scanLine <= 239) {
-            //evalSprites();
+            evalSprites();
         }
 
         if (dot == 257) {
@@ -28,7 +35,6 @@ void PPU::tick() {
          
         //main hook: fetch tiles, emit pixel, shift
         if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
-            
             //reload shift registers and shift
             if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
                 reloadShiftersAndShift();
@@ -40,7 +46,7 @@ void PPU::tick() {
             if (scanLine >= 0 && scanLine <= 239) {
                 if (dot >= 1 && dot <= 256) {
                     if (scanLine > 0) {
-                        //decrementSpriteCounters();
+                        decrementSpriteCounters();
                     }
                     
                     emitPixel();
@@ -64,11 +70,6 @@ void PPU::tick() {
                 nmiOccured = true;
             }
         }
-    }
-
-    //skip dot on odd frame
-    if (odd && !isRenderingDisabled() && dot == 339 && scanLine == 261) {
-        dot++;
     }
     
     if (dot == 340) {
@@ -156,12 +157,18 @@ inline void PPU::fetchTiles() {
          ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
     } else if (cycle == 0) {
+        uint8_t quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
+        uint8_t attr_bits1 = (attrbyte >> quadrant_num) & 1;
+        uint8_t attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
+        attrShiftReg1 |= attr_bits1 ? 255 : 0;
+        attrShiftReg2 |= attr_bits2 ? 255 : 0;
         
         if (dot == 256) {
             yIncrement();
-        } else {
-            xIncrement();
         }
+        
+        xIncrement();
+        
     }
 }
 
@@ -170,7 +177,6 @@ inline void PPU::emitPixel() {
         return;
     }
     
-    x=0;
     uint16_t fineSelect = 0x8000 >> x;
     uint16_t pixel1 = (bgShiftRegLo & fineSelect) << x;
     uint16_t pixel2 = (bgShiftRegHi & fineSelect) << x;
@@ -178,41 +184,45 @@ inline void PPU::emitPixel() {
     uint16_t pixel4 = (attrShiftReg2 & fineSelect) << x;
     uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
     uint8_t spritePaletteIndex = 0;
-    /*bool showSprite = false;
+    bool showSprite = false;
     
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < spriteRenderEntities.size(); i++) {
         if (spriteRenderEntities[i].isActive) {
+
+            if (!(ppustatus & 64))
+                ppustatus |= 64;
+            
             SpriteRenderEntity &sprite = spriteRenderEntities[i];
             uint8_t spritePixel1 = sprite.lo & 128;
             uint8_t spritePixel2 = sprite.hi & 128;
             uint8_t spritePixel3 = sprite.attr & 1;
             uint8_t spritePixel4 = sprite.attr & 2;
-            showSprite = true;
+            showSprite = spritePixel1 || spritePixel2;
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | (spritePixel2 >> 6) | (spritePixel1 >> 7);
             sprite.shift();
-            
+            //std::cout << "Shifted " << unsigned(i) << ", " << sprite.shifted << std::endl;
             break;
         }
-    }*/
+    }
     
     //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
     
-    /*if (showSprite) {
+    if (showSprite) {
         uint8_t p = ppuread(0x3F00 | spritePaletteIndex) * 3;
         uint8_t r = palette[p];
         uint8_t g = palette[p + 1];
         uint8_t b = palette[p + 2];
         buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
-    } else {*/
+    } else {
         uint8_t p = ppuread(0x3F00 | paletteIndex) * 3;
         uint8_t r = palette[p];
         uint8_t g = palette[p + 1];
         uint8_t b = palette[p + 2];
         buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
-    //}
+    }
 }
 
 uint8_t mux(uint8_t bg, uint8_t sprite) {
@@ -318,10 +328,7 @@ void PPU::write(uint16_t address, uint8_t data) {
         } else {
             t &= 0xFF00;
             t |= data;
-            std::cout << "V is before .. " << unsigned(v) << std::endl;
             v = t;
-            std::cout << "V is after 2006 .. " << unsigned(v) << std::endl;
-            printState();
 
             w = 0;
         }
@@ -418,7 +425,7 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
             break;
         case 0x3F10 ... 0x3F1F:
             if (address == 0x3F10 || address == 0x3F14 || address == 0x3F18 || address == 0x3F1C) {
-                bg_palette[address & 0x3F0F] = data;
+                bg_palette[(address & 0x3F0F) - 0x3F00] = data;
             } else if (address >= 0x3F11 && address <= 0x3F1F) {
                 sprite_palette[address - 0x3F10] = data;
             }
@@ -452,8 +459,8 @@ inline void PPU::decrementSpriteCounters() {
         return;
     }
     
-    for (int i = 0; i < 8; i++) {
-        if (spriteRenderEntities[i].counter > 0 && spriteRenderEntities[i].counter < 255) {
+    for (int i = 0; i < spriteRenderEntities.size(); i++) {
+        if (spriteRenderEntities[i].counter != 0) {
            spriteRenderEntities[i].counter--;
             
             if (spriteRenderEntities[i].counter == 0) {
@@ -461,6 +468,10 @@ inline void PPU::decrementSpriteCounters() {
             }
         }
     }
+}
+
+bool PPU::isUninit(const Sprite& sprite) {
+    return (sprite.attr == 0xFF) && (sprite.tileNum == 0xFF) && (sprite.x == 0xFF) && (sprite.y == 0xFF);
 }
 
 void PPU::evalSprites() {
@@ -493,7 +504,7 @@ void PPU::evalSprites() {
         }
         
         //odd cycle read
-        if ((dot % 2) == 1) {
+        if ((dot % 2) == 1 && primaryOAMCursor < 64) {
             tmpOAM = primaryOAM[primaryOAMCursor];
             
             if (inYRange(tmpOAM)) {
@@ -503,7 +514,7 @@ void PPU::evalSprites() {
         //even cycle write
         } else {
             //tmpOAM is in range, write it to secondaryOAM
-            if (inRange) {
+            if (inRange && primaryOAMCursor < 64) {
                 inRangeCycles--;
 
                 //copying tmpOAM in range is 8 cycles, 2 cycles otherwise
@@ -517,11 +528,12 @@ void PPU::evalSprites() {
                         //Sprite overflow
                         ppustatus |= 0x20;
                     } else {
+                        tmpOAM.id = primaryOAMCursor;
                         secondaryOAM[secondaryOAMCursor] = tmpOAM;
                     }
                 }
             } else {
-                primaryOAMCursor = (primaryOAMCursor+1) % 64;
+                primaryOAMCursor++;
             }
         }
     }
@@ -530,38 +542,55 @@ void PPU::evalSprites() {
     if (dot >= 257 && dot <= 320) {
         if (dot == 257) {
             secondaryOAMCursor = 0;
+            spriteRenderEntities.clear();
         }
         
         Sprite sprite = secondaryOAM[secondaryOAMCursor];
+        
         int cycle = (dot-1) % 8;
         
         switch (cycle) {
             case 0 ... 1:
-                //Ignore for now
+                if (!isUninit(sprite))
+                out = SpriteRenderEntity();
                 break;
                 
             case 2:
-                spriteRenderEntities[secondaryOAMCursor].attr = sprite.attr;
+                
+                if (!isUninit(sprite)) {
+                out.attr = sprite.attr;
+                    out.id = sprite.id;
+                }
                 break;
                 
             case 3:
-                spriteRenderEntities[secondaryOAMCursor].counter = sprite.x;
+            if (!isUninit(sprite))
+                out.counter = sprite.x;
                 break;
                 
             case 4:
+                
+                if (!isUninit(sprite)) {
                 spritePatternLowAddr = getSpritePatternAddress(sprite);
-                spriteRenderEntities[secondaryOAMCursor].lo = ppuread(spritePatternLowAddr);
+                out.lo = ppuread(spritePatternLowAddr);
+                }
                 break;
                 
             case 5:
                 break;
                 
             case 6:
+                
+                if (!isUninit(sprite)) {
                 spritePatternHighAddr = spritePatternLowAddr + 8;
-                spriteRenderEntities[secondaryOAMCursor].hi = ppuread(spritePatternHighAddr);
+                out.hi = ppuread(spritePatternHighAddr);
+                }
                 break;
                 
             case 7:
+                if (!isUninit(sprite))
+                    spriteRenderEntities.push_back(out);
+                
                 secondaryOAMCursor++;
                 break;
                 
@@ -587,7 +616,7 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite) {
 }
 
 bool PPU::inYRange(const Sprite& oam) {
-    return ((scanLine+1 >= oam.y) && (scanLine+1 <= (oam.y + spriteHeight)));
+    return ((scanLine+1 > oam.y) && (scanLine+1 < (oam.y + spriteHeight)));
 }
 
 void PPU::printState() {

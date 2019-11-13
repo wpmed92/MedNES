@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/palette.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;

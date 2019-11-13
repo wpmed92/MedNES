@@ -11,6 +11,7 @@ struct Sprite {
     uint8_t tileNum;
     uint8_t attr;
     uint8_t x;
+    uint8_t id;
 };
 
 struct SpriteRenderEntity {
@@ -18,12 +19,14 @@ struct SpriteRenderEntity {
     uint8_t hi;
     uint8_t attr;
     uint8_t counter;
+    uint8_t id;
     bool isActive;
-    int shifted;
+    int shifted = 0;
     
     void shift() {
-        if (shifted == 8) {
+        if (shifted == 7) {
             isActive = false;
+            shifted = 0;
             return;
         }
         
@@ -76,11 +79,12 @@ private:
     int inRangeCycles = 8;
     int spriteHeight = 8;
     //render entities
-    SpriteRenderEntity spriteRenderEntities[8];
-    
+    std::vector<SpriteRenderEntity> spriteRenderEntities;
+
+    SpriteRenderEntity out;
     ROM* rom;
     
-    int scanLine = 0;
+    int scanLine = 261;
     int pixelIndex = 0;
     bool odd = false;
     bool nmiOccured = false;
@@ -102,6 +106,7 @@ private:
     void evalSprites();
     uint8_t mux(uint8_t, uint8_t);
     bool inYRange(const Sprite&);
+    bool isUninit(const Sprite&);
     
 public:
     
