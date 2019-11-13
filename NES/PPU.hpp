@@ -106,7 +106,7 @@ private:
 public:
     
     int dot = 0;
-    PPU(ROM* rom) : rom(rom) { };
+    PPU(ROM* rom) : rom(rom) { buffer = new uint32_t[256*240]; };
     //cpu address space
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
@@ -121,7 +121,7 @@ public:
     void drawFrame();
     bool generateFrame;
     void printState();
-    uint32_t buffer[256*240] = { 0 };
+    uint32_t* buffer;
 };
 
 
