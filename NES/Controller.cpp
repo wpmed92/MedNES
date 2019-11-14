@@ -10,9 +10,15 @@
 
 uint8_t* Controller::read(uint16_t address) {
     if (address == 0x4016) {
-        JOY1 = shifter & 1;
-        shifter >>= 1;
+        JOY1 = 0x40 | (shifter & 1);
         
+        if (strobe) {
+            return &JOY1;
+        }
+        
+        if (shift) {
+            shifter >>= 1;
+        }
         return &JOY1;
     } else {
         //TODO: Implement JOY2
@@ -22,12 +28,47 @@ uint8_t* Controller::read(uint16_t address) {
 
 void Controller::write(uint16_t address, uint8_t data) {
     if (address == 0x4016) {
-        shouldPoll = data;
+        shift = strobe && !data;
+        strobe = shouldPoll = data;
+    
     } else {
         //TODO: Implement JOY2
     }
 }
 
-void Controller::setButtonPressed(int button) {
-    shifter |= 1 << button;
+void Controller::setButtonPressed(SDL_Keycode key, bool pressed) {
+    if (!shouldPoll)
+        return;
+    
+    if (key == SDLK_a) {
+        shifter = (pressed) ? (shifter | (1 << 0)) : (shifter & ~(1 << 0));
+    }
+    
+    if (key == SDLK_b) {
+        shifter = (pressed) ? (shifter | (1 << 1)) : (shifter & ~(1 << 1));
+    }
+    
+    if (key == SDLK_SPACE) {
+        shifter = (pressed) ? (shifter | (1 << 2)) : (shifter & ~(1 << 2));
+    }
+    
+    if (key == SDLK_RETURN) {
+        shifter = (pressed) ? (shifter | (1 << 3)) : (shifter & ~(1 << 3));
+    }
+    
+    if (key == SDLK_UP) {
+        shifter = (pressed) ? (shifter | (1 << 4)) : (shifter & ~(1 << 4));
+    }
+    
+    if (key == SDLK_DOWN) {
+        shifter = (pressed) ? (shifter | (1 << 5)) : (shifter & ~(1 << 5));
+    }
+    
+    if (key == SDLK_LEFT) {
+        shifter = (pressed) ? (shifter | (1 << 6)) : (shifter & ~(1 << 6));
+    }
+    
+    if (key == SDLK_RIGHT) {
+        shifter = (pressed) ? (shifter | (1 << 7)) : (shifter & ~(1 << 7));
+    }
 }

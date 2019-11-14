@@ -1,7 +1,9 @@
 #include <iostream>
-#include "../test/CPUTest.hpp"
 #include <SDL2/SDL.h>
-
+#include "ROM.hpp"
+#include "6502.hpp"
+#include "PPU.hpp"
+#include "Controller.hpp"
 int main(int argc, char ** argv) {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cout << "SDL could not initialize." << SDL_GetError() << std::endl;
@@ -32,7 +34,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Donkey-Kong.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Mario Bros.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -47,40 +49,16 @@ int main(int argc, char ** argv) {
     
     while (is_running) {
         cpu.step();
-        
-        if (ppu.generateFrame) {
+
+        if (controller.shouldPoll) {
             //Read controller input
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
-                        switch(event.key.keysym.sym) {
-                            case SDLK_a:
-                                controller.setButtonPressed(0);
-                                break;
-                            case SDLK_b:
-                                controller.setButtonPressed(1);
-                                break;
-                            case SDLK_SPACE:
-                                controller.setButtonPressed(2);
-                                break;
-                            case SDLK_RETURN:
-                                controller.setButtonPressed(3);
-                                break;
-                            case SDLK_UP:
-                                controller.setButtonPressed(4);
-                                break;
-                            case SDLK_DOWN:
-                                controller.setButtonPressed(5);
-                                break;
-                            case SDLK_LEFT:
-                                controller.setButtonPressed(6);
-                                break;
-                            case SDLK_RIGHT:
-                                controller.setButtonPressed(7);
-                                break;
-                            default:
-                                break;
-                        }
+                        controller.setButtonPressed(event.key.keysym.sym, true);
+                        break;
+                    case SDL_KEYUP:
+                        controller.setButtonPressed(event.key.keysym.sym, false);
                         break;
                     //SDL_QUIT event (window close)
                     case SDL_QUIT:
@@ -91,7 +69,9 @@ int main(int argc, char ** argv) {
                         break;
                 }
             }
-            
+        }
+        
+        if (ppu.generateFrame) {
             //Measure fps
             nmiCounter++;
             auto t2 = std::chrono::high_resolution_clock::now();

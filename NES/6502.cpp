@@ -538,7 +538,7 @@ inline void CPU6502::setNegative(bool val) {
 }
 
 inline void CPU6502::setOverflow(bool val) {
-    setSRFlag(StatusFlags::OVERFLOW, val);
+    setSRFlag(StatusFlags::OVERFLO, val);
 }
 
 inline void CPU6502::setBreak4(bool val) {

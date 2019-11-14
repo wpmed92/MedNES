@@ -188,19 +188,18 @@ inline void PPU::emitPixel() {
     
     for (int i = 0; i < spriteRenderEntities.size(); i++) {
         if (spriteRenderEntities[i].isActive) {
-
-            if (!(ppustatus & 64))
-                ppustatus |= 64;
-            
             SpriteRenderEntity &sprite = spriteRenderEntities[i];
-            uint8_t spritePixel1 = sprite.lo & 128;
-            uint8_t spritePixel2 = sprite.hi & 128;
+            uint8_t spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
+            uint8_t spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
             uint8_t spritePixel3 = sprite.attr & 1;
             uint8_t spritePixel4 = sprite.attr & 2;
             showSprite = spritePixel1 || spritePixel2;
+            
+            if (!(ppustatus & 64) && showSprite)
+                ppustatus |= 64;
+            
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | (spritePixel2 >> 6) | (spritePixel1 >> 7);
             sprite.shift();
-            //std::cout << "Shifted " << unsigned(i) << ", " << sprite.shifted << std::endl;
             break;
         }
     }
@@ -552,27 +551,27 @@ void PPU::evalSprites() {
         switch (cycle) {
             case 0 ... 1:
                 if (!isUninit(sprite))
-                out = SpriteRenderEntity();
+                    out = SpriteRenderEntity();
                 break;
                 
             case 2:
-                
                 if (!isUninit(sprite)) {
-                out.attr = sprite.attr;
+                    out.attr = sprite.attr;
+                    out.flipHorizontally = sprite.attr & 64;
+                    out.flipVertically = sprite.attr & 128;
                     out.id = sprite.id;
                 }
                 break;
                 
             case 3:
-            if (!isUninit(sprite))
-                out.counter = sprite.x;
+                if (!isUninit(sprite))
+                    out.counter = sprite.x;
                 break;
                 
             case 4:
-                
                 if (!isUninit(sprite)) {
-                spritePatternLowAddr = getSpritePatternAddress(sprite);
-                out.lo = ppuread(spritePatternLowAddr);
+                    spritePatternLowAddr = getSpritePatternAddress(sprite, out.flipVertically);
+                    out.lo = ppuread(spritePatternLowAddr);
                 }
                 break;
                 
@@ -580,10 +579,9 @@ void PPU::evalSprites() {
                 break;
                 
             case 6:
-                
                 if (!isUninit(sprite)) {
-                spritePatternHighAddr = spritePatternLowAddr + 8;
-                out.hi = ppuread(spritePatternHighAddr);
+                    spritePatternHighAddr = spritePatternLowAddr + 8;
+                    out.hi = ppuread(spritePatternHighAddr);
                 }
                 break;
                 
@@ -600,11 +598,15 @@ void PPU::evalSprites() {
     }
 }
 
-uint16_t PPU::getSpritePatternAddress(const Sprite &sprite) {
+uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
     uint16_t addr = 0;
     
     if (spriteHeight == 8) {
-        int fineOffset = (scanLine - sprite.y);
+        int fineOffset = scanLine+1 - sprite.y;
+        
+        if (flipVertically)
+            fineOffset = spriteHeight-1 - fineOffset;
+        
         addr = (((uint16_t) ppuctrl & 8) << 9) |
         ((uint16_t) sprite.tileNum << 4) |
         fineOffset;
@@ -616,7 +618,7 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite) {
 }
 
 bool PPU::inYRange(const Sprite& oam) {
-    return ((scanLine+1 > oam.y) && (scanLine+1 < (oam.y + spriteHeight)));
+    return ((scanLine+1 >= oam.y) && (scanLine+1 < (oam.y + spriteHeight)));
 }
 
 void PPU::printState() {

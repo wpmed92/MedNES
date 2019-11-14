@@ -20,6 +20,8 @@ struct SpriteRenderEntity {
     uint8_t attr;
     uint8_t counter;
     uint8_t id;
+    bool flipHorizontally;
+    bool flipVertically;
     bool isActive;
     int shifted = 0;
     
@@ -30,8 +32,14 @@ struct SpriteRenderEntity {
             return;
         }
         
-        lo <<= 1;
-        hi <<= 1;
+        if (flipHorizontally) {
+            lo >>= 1;
+            hi >>= 1;
+        } else {
+            lo <<= 1;
+            hi <<= 1;
+        }
+        
         shifted++;
     }
 };
@@ -100,7 +108,7 @@ private:
     inline void yIncrement();
     inline void reloadShiftersAndShift();
     inline void decrementSpriteCounters();
-    uint16_t getSpritePatternAddress(const Sprite&);
+    uint16_t getSpritePatternAddress(const Sprite&, bool);
     bool inNMISupressInterval();
     bool inVBlank();
     void evalSprites();

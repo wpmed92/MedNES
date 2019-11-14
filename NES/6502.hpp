@@ -51,7 +51,7 @@ private:
     
     enum StatusFlags {
         NEGATIVE = 7,
-        OVERFLOW = 6,
+        OVERFLO = 6,
         BREAK5 = 5,
         BREAK4 = 4,
         DECIMAL = 3,
