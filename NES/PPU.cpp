@@ -195,7 +195,7 @@ inline void PPU::emitPixel() {
             uint8_t spritePixel4 = sprite.attr & 2;
             showSprite = spritePixel1 || spritePixel2;
             
-            if (!(ppustatus & 64) && showSprite)
+            if (!(ppustatus & 64) && showSprite && sprite.id == 0)
                 ppustatus |= 64;
             
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | (spritePixel2 >> 6) | (spritePixel1 >> 7);

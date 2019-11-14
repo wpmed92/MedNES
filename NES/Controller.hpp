@@ -10,6 +10,8 @@ class Controller : INESBus {
     uint8_t JOY1 = 0;
     uint8_t JOY2 = 0;
     uint8_t shifter = 0;
+    
+    uint8_t shifter1 = 0;
     bool strobe;
     bool shift;
     

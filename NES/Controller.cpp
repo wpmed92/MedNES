@@ -30,6 +30,10 @@ void Controller::write(uint16_t address, uint8_t data) {
     if (address == 0x4016) {
         shift = strobe && !data;
         strobe = shouldPoll = data;
+        
+        if (shouldPoll) {
+            shifter = shifter1;
+        }
     
     } else {
         //TODO: Implement JOY2
@@ -41,34 +45,34 @@ void Controller::setButtonPressed(SDL_Keycode key, bool pressed) {
         return;
     
     if (key == SDLK_a) {
-        shifter = (pressed) ? (shifter | (1 << 0)) : (shifter & ~(1 << 0));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 0)) : (shifter & ~(1 << 0));
     }
     
     if (key == SDLK_b) {
-        shifter = (pressed) ? (shifter | (1 << 1)) : (shifter & ~(1 << 1));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 1)) : (shifter & ~(1 << 1));
     }
     
     if (key == SDLK_SPACE) {
-        shifter = (pressed) ? (shifter | (1 << 2)) : (shifter & ~(1 << 2));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 2)) : (shifter & ~(1 << 2));
     }
     
     if (key == SDLK_RETURN) {
-        shifter = (pressed) ? (shifter | (1 << 3)) : (shifter & ~(1 << 3));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 3)) : (shifter & ~(1 << 3));
     }
     
     if (key == SDLK_UP) {
-        shifter = (pressed) ? (shifter | (1 << 4)) : (shifter & ~(1 << 4));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 4)) : (shifter & ~(1 << 4));
     }
     
     if (key == SDLK_DOWN) {
-        shifter = (pressed) ? (shifter | (1 << 5)) : (shifter & ~(1 << 5));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 5)) : (shifter & ~(1 << 5));
     }
     
     if (key == SDLK_LEFT) {
-        shifter = (pressed) ? (shifter | (1 << 6)) : (shifter & ~(1 << 6));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 6)) : (shifter & ~(1 << 6));
     }
     
     if (key == SDLK_RIGHT) {
-        shifter = (pressed) ? (shifter | (1 << 7)) : (shifter & ~(1 << 7));
+        shifter1 = shifter = (pressed) ? (shifter | (1 << 7)) : (shifter & ~(1 << 7));
     }
 }
