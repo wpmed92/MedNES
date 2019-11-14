@@ -5,10 +5,15 @@
 #include <string>
 #include "INESBus.hpp"
 
+#include <SDL2/SDL.h>
 class Controller : INESBus {
     uint8_t JOY1 = 0;
     uint8_t JOY2 = 0;
     uint8_t shifter = 0;
+    
+    uint8_t shifter1 = 0;
+    bool strobe;
+    bool shift;
     
 public:
     bool shouldPoll;
@@ -17,7 +22,7 @@ public:
     void write(uint16_t address, uint8_t data);
     
     //Input
-    void setButtonPressed(int);
+    void setButtonPressed(SDL_Keycode, bool);
     
 };
 #endif /* Controller_hpp */
