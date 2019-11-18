@@ -9,14 +9,11 @@
 class Controller : INESBus {
     uint8_t JOY1 = 0;
     uint8_t JOY2 = 0;
-    uint8_t shifter = 0;
-    
-    uint8_t shifter1 = 0;
+    uint8_t btnStateLocked = 0;
+    uint8_t btnState = 0;
     bool strobe;
-    bool shift;
     
 public:
-    bool shouldPoll;
     //Bus
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);

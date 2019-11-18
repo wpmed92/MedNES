@@ -34,7 +34,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Super-Mario-Bros.nes");
+    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
@@ -50,8 +50,8 @@ int main(int argc, char ** argv) {
     while (is_running) {
         cpu.step();
 
-        if (controller.shouldPoll) {
-            //Read controller input
+        if (ppu.generateFrame) {
+            //Poll controller
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
@@ -60,18 +60,13 @@ int main(int argc, char ** argv) {
                     case SDL_KEYUP:
                         controller.setButtonPressed(event.key.keysym.sym, false);
                         break;
-                    //SDL_QUIT event (window close)
                     case SDL_QUIT:
                         is_running = false;
                         break;
-
                     default:
                         break;
                 }
             }
-        }
-        
-        if (ppu.generateFrame) {
             //Measure fps
             nmiCounter++;
             auto t2 = std::chrono::high_resolution_clock::now();
