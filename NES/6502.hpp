@@ -6,6 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <functional>
 #include "RAM.hpp"
 #include "ROM.hpp"
 #include "PPU.hpp"
