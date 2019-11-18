@@ -30,4 +30,7 @@ Antarctic Adventure
 
 ## Usage
 
-Currently you need MacOS and XCode to build the project, but a CMake port will be available soon. 
+```
+make
+./MedNES
+```
