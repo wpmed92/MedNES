@@ -19,11 +19,11 @@ void PPU::tick() {
         }
 
          //skip dot on odd frame
-         if (odd && !isRenderingDisabled() && dot == 339 && scanLine == 261) {
+         /*if (odd && !isRenderingDisabled() && dot == 339 && scanLine == 261) {
              scanLine = 0;
              dot = 0;
              tick();
-         }
+         }*/
          
         if (scanLine >= 0 && scanLine <= 239) {
             evalSprites();
@@ -177,30 +177,51 @@ inline void PPU::emitPixel() {
         return;
     }
     
+    //Bg
     uint16_t fineSelect = 0x8000 >> x;
     uint16_t pixel1 = (bgShiftRegLo & fineSelect) << x;
     uint16_t pixel2 = (bgShiftRegHi & fineSelect) << x;
     uint16_t pixel3 = (attrShiftReg1 & fineSelect) << x;
     uint16_t pixel4 = (attrShiftReg2 & fineSelect) << x;
+    uint8_t bgBit12 = (pixel2 >> 14) | (pixel1 >> 15);
+    
+    //Sprites
+    uint8_t spritePixel1 = 0;
+    uint8_t spritePixel2 = 0;
+    uint8_t spritePixel3 = 0;
+    uint8_t spritePixel4 = 0;
+    uint8_t spriteBit12 = 0;
     uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
     uint8_t spritePaletteIndex = 0;
     bool showSprite = false;
+    bool spriteFound = false;
     
     for (int i = 0; i < spriteRenderEntities.size(); i++) {
         if (spriteRenderEntities[i].isActive) {
             SpriteRenderEntity &sprite = spriteRenderEntities[i];
-            uint8_t spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
-            uint8_t spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
-            uint8_t spritePixel3 = sprite.attr & 1;
-            uint8_t spritePixel4 = sprite.attr & 2;
-            showSprite = spritePixel1 || spritePixel2;
             
-            if (!(ppustatus & 64) && showSprite && sprite.id == 0)
+            if (spriteFound) {
+                sprite.shift();
+                continue;
+            }
+            
+            spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
+            spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
+            spritePixel3 = sprite.attr & 1;
+            spritePixel4 = sprite.attr & 2;
+            spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
+            
+            if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
                 ppustatus |= 64;
+            }
             
-                spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | (spritePixel2 >> 6) | (spritePixel1 >> 7);
+            if (spriteBit12) {
+                showSprite = ((spriteBit12 && bgBit12 && !(sprite.attr & 32)) || (spriteBit12 && !bgBit12)) && (ppumask & 16);
+                spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
+                spriteFound = true;
+            }
+
             sprite.shift();
-            break;
         }
     }
     
@@ -459,6 +480,8 @@ inline void PPU::decrementSpriteCounters() {
     }
     
     for (int i = 0; i < spriteRenderEntities.size(); i++) {
+        if (spriteRenderEntities.size() == 0)
+            break;
         if (spriteRenderEntities[i].counter != 0) {
            spriteRenderEntities[i].counter--;
             
@@ -470,14 +493,10 @@ inline void PPU::decrementSpriteCounters() {
 }
 
 bool PPU::isUninit(const Sprite& sprite) {
-    return (sprite.attr == 0xFF) && (sprite.tileNum == 0xFF) && (sprite.x == 0xFF) && (sprite.y == 0xFF);
+    return ((sprite.attr == 0xFF) && (sprite.tileNum == 0xFF) && (sprite.x == 0xFF) && (sprite.y == 0xFF)) || ((sprite.x == 0) && (sprite.y == 0) && (sprite.attr == 0) && (sprite.tileNum == 0));
 }
 
 void PPU::evalSprites() {
-    if (isRenderingDisabled()) {
-        return;
-    }
-    
     //clear secondary OAM
     if (dot >= 1 && dot <= 64) {
         if (dot == 1) {
@@ -502,8 +521,17 @@ void PPU::evalSprites() {
             primaryOAMCursor = 0;
         }
         
+        if (secondaryOAMCursor == 8) {
+            //ppustatus |= 0x20;
+            return;
+        }
+        
+        if (primaryOAMCursor == 64) {
+            return;
+        }
+        
         //odd cycle read
-        if ((dot % 2) == 1 && primaryOAMCursor < 64) {
+        if ((dot % 2) == 1) {
             tmpOAM = primaryOAM[primaryOAMCursor];
             
             if (inYRange(tmpOAM)) {
@@ -513,7 +541,7 @@ void PPU::evalSprites() {
         //even cycle write
         } else {
             //tmpOAM is in range, write it to secondaryOAM
-            if (inRange && primaryOAMCursor < 64) {
+            if (inRange) {
                 inRangeCycles--;
 
                 //copying tmpOAM in range is 8 cycles, 2 cycles otherwise
@@ -523,13 +551,8 @@ void PPU::evalSprites() {
                     inRangeCycles = 8;
                     inRange = false;
                 } else {
-                    if (secondaryOAMCursor == 8) {
-                        //Sprite overflow
-                        ppustatus |= 0x20;
-                    } else {
-                        tmpOAM.id = primaryOAMCursor;
-                        secondaryOAM[secondaryOAMCursor] = tmpOAM;
-                    }
+                    tmpOAM.id = primaryOAMCursor;
+                    secondaryOAM[secondaryOAMCursor] = tmpOAM;
                 }
             } else {
                 primaryOAMCursor++;
@@ -602,7 +625,7 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically)
     uint16_t addr = 0;
     
     if (spriteHeight == 8) {
-        int fineOffset = scanLine+1 - sprite.y;
+        int fineOffset = scanLine - sprite.y;
         
         if (flipVertically)
             fineOffset = spriteHeight-1 - fineOffset;
@@ -611,14 +634,21 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically)
         ((uint16_t) sprite.tileNum << 4) |
         fineOffset;
     } else {
-        //TODO: implement 8x16 sprites
+        
+        int fineOffset = scanLine - sprite.y;
+        
+        if (flipVertically)
+            fineOffset = spriteHeight-1 - fineOffset;
+        addr = (((uint16_t) sprite.tileNum & 1) << 12) |
+        ((uint16_t) ((sprite.tileNum & ~1) << 4)) |
+        fineOffset;
     }
     
     return addr;
 }
 
 bool PPU::inYRange(const Sprite& oam) {
-    return ((scanLine+1 >= oam.y) && (scanLine+1 < (oam.y + spriteHeight)));
+    return !isUninit(oam) && ((scanLine >= oam.y) && (scanLine < (oam.y + spriteHeight)));
 }
 
 void PPU::printState() {

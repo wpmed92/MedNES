@@ -86,13 +86,14 @@ private:
     bool inRange = false;
     int inRangeCycles = 8;
     int spriteHeight = 8;
+    int spriteDelayCounter = 4;
     //render entities
     std::vector<SpriteRenderEntity> spriteRenderEntities;
 
     SpriteRenderEntity out;
     ROM* rom;
     
-    int scanLine = 261;
+    int scanLine = 0;
     int pixelIndex = 0;
     bool odd = false;
     bool nmiOccured = false;
