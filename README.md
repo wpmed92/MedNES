@@ -2,11 +2,32 @@
 MedNES is a cycle-accurate NES emulator written in C++.
 Supported mappers: NROM(0)
 
-# Screenshots
+## Screenshots
 
-![Super Mario Bros] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png?raw=true)
-![Donkey Kong] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png?raw=true)
-![Bomberman] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png?raw=true)
-![Pac-Man] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png?raw=true)
-![Battle City] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png?raw=true)
-![Antarctic Adventure] (https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png?raw=true)
+Super Mario Bros
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png)
+
+Donkey Kong
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png)
+
+Bomberman
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png)
+
+Pac-Man
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png)
+
+Battle City
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png)
+
+Antarctic Adventure
+
+![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png)
+
+## Usage
+
+Currently you need MacOS and XCode to build the project, but a CMake port will be available soon. 
