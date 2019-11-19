@@ -2,6 +2,14 @@
 MedNES is a cycle-accurate NES emulator written in C++.
 Supported mappers: NROM(0)
 
+## Usage
+
+```
+git clone https://github.com/wpmed92/MedNES.git
+make
+./MedNES -insert <path/to/rom>
+```
+
 ## Screenshots
 
 Super Mario Bros
@@ -27,10 +35,3 @@ Battle City
 Antarctic Adventure
 
 ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png)
-
-## Usage
-
-```
-make
-./MedNES
-```
