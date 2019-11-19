@@ -5,7 +5,25 @@
 #include "6502.hpp"
 #include "PPU.hpp"
 #include "Controller.hpp"
+
 int main(int argc, char ** argv) {
+    std::string romPath = "";
+    std::string COMMAND_LINE_ERROR_MESSAGE = "Use -insert <path/to/rom> to start playing.";
+
+    if (argc < 2) {
+        std::cout << COMMAND_LINE_ERROR_MESSAGE << std::endl;
+        return 1;
+    }
+
+    std::string option = argv[1];
+
+    if (option == "-insert") {
+        romPath = argv[2];
+    } else {
+        std::cout << "Unkown option '" << option << "'. " << COMMAND_LINE_ERROR_MESSAGE << std::endl;
+        return 1;
+    }
+
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cout << "SDL could not initialize." << SDL_GetError() << std::endl;
     }
@@ -13,7 +31,7 @@ int main(int argc, char ** argv) {
     SDL_Window *window;
     std::string window_title = "MedNES";
     bool headlessMode = false;
-    
+
     window = SDL_CreateWindow(
         window_title.c_str(),                  // window title
         SDL_WINDOWPOS_UNDEFINED,           // initial x position
@@ -35,7 +53,7 @@ int main(int argc, char ** argv) {
     SDL_Renderer *s = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | ((headlessMode) ? 0 : SDL_RENDERER_PRESENTVSYNC)) ;
     
     ROM rom;
-    rom.open("/users/wpmed92/Desktop/NES/roms/Pac-Man.nes");
+    rom.open(romPath);
     rom.printHeader();
     PPU ppu = PPU(&rom);
     Controller controller;
