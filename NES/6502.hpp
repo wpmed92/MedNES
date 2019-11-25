@@ -1,5 +1,4 @@
-#ifndef _502_hpp
-#define _502_hpp
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -327,6 +326,7 @@ private:
     void tickIfToNewPage(uint16_t, uint16_t);
     
     inline void pushPC();
+
 public:
     CPU6502(ROM* rom, PPU* ppu, Controller* controller) : rom(rom), ppu(ppu), controller(controller) { };
     uint8_t fetchInstruction();
@@ -340,5 +340,3 @@ public:
     void setProgramCounter(uint16_t);
     ExecutionState* getExecutionState();
 };
-
-#endif /* _502_hpp */

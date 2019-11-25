@@ -1,5 +1,4 @@
-#ifndef PPU_hpp
-#define PPU_hpp
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -121,6 +120,7 @@ public:
     
     int dot = 0;
     PPU(ROM* rom) : rom(rom) { buffer = new uint32_t[256*240]; };
+    
     //cpu address space
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
@@ -137,7 +137,3 @@ public:
     void printState();
     uint32_t* buffer;
 };
-
-
-
-#endif /* PPU_hpp */

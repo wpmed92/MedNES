@@ -1,5 +1,4 @@
-#ifndef RAM_hpp
-#define RAM_hpp
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -15,5 +14,3 @@ public:
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
 };
-
-#endif /* RAM_hpp */
