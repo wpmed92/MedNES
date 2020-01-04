@@ -6,6 +6,8 @@
 #include <vector>
 #include <bitset>
 #include "INESBus.hpp"
+#include "Mapper/NROM.hpp"
+#include "Mapper/UnROM.hpp"
 
 struct INESHeader {
     //Header 16 byte
@@ -29,6 +31,7 @@ private:
     std::vector<uint8_t> chrData;
     uint8_t chrRAM[8192];
     int mirroring;
+    uint8_t mapperNum;
     
 public:
     std::vector<uint8_t> getChrData() { return chrData; };
@@ -37,6 +40,7 @@ public:
     void printHeader();
     void loadTestProgramcode(std::vector<uint8_t>);
     int getMirroring();
+    Mapper* getMapper();
     
     //cpu address space
     uint8_t* read(uint16_t address);

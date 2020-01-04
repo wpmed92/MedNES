@@ -7,9 +7,9 @@
 #include <iostream>
 #include <functional>
 #include "RAM.hpp"
-#include "ROM.hpp"
 #include "PPU.hpp"
 #include "Controller.hpp"
+#include "Mapper/Mapper.hpp"
 
 struct ExecutionState {
     uint8_t accumulator;
@@ -38,7 +38,7 @@ private:
     
     //Devices
     RAM ram;
-    ROM* rom;
+    Mapper* mapper;
     PPU* ppu;
     Controller* controller;
     
@@ -328,7 +328,7 @@ private:
     inline void pushPC();
 
 public:
-    CPU6502(ROM* rom, PPU* ppu, Controller* controller) : rom(rom), ppu(ppu), controller(controller) { };
+    CPU6502(Mapper* mapper, PPU* ppu, Controller* controller) : mapper(mapper), ppu(ppu), controller(controller) { };
     uint8_t fetchInstruction();
     void executeInstruction(uint8_t);
     uint8_t* memoryAccess(MemoryAccessMode, uint16_t, uint8_t);

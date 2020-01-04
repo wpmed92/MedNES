@@ -42,6 +42,7 @@ void ROM::printHeader() {
     std::cout << "Signature: " << header.nes << "\n";
     std::cout << "PRG ROM (program code) size: " << (int)header.prgIn16kb << " x 16kb \n";
     std::cout << "CHR ROM (graphical data) size: " << (int)header.chrIn8kb << " x 8kb \n";
+    mapperNum = ((header.flags6 & 0xF0) >> 4) | (header.flags7 & 0xF0);
     std::bitset<8> flags6Bits(header.flags6);
     std::bitset<8> flags7Bits(header.flags7);
     std::cout << "Flags 6: " << flags6Bits << "\n";
@@ -54,6 +55,23 @@ void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
 
 int ROM::getMirroring() {
     return mirroring;
+}
+
+Mapper* ROM::getMapper() {
+  switch (mapperNum) {
+    case 0:
+      return new NROM(this);
+      break;
+
+    case 2:
+      return new UnROM(this);
+      break;
+
+    default:
+      //Unsupported mapper:
+      return NULL;
+      break;
+  }
 }
 
 //cpu bus

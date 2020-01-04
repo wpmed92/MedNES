@@ -7,7 +7,7 @@ class NROM : public Mapper {
      std::vector<uint8_t> prgCode;
 
   public:
-    NROM(ROM* rom) : Mapper(rom) { prgCode = rom->getPrgCode(); }
+    NROM(ROM* rom) : Mapper(rom) { }
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../INESBus.hpp"
-#include "../ROM.hpp"
+class ROM;
 
 class Mapper {
   protected:
