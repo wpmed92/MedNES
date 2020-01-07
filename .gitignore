@@ -1,4 +1,4 @@
 NES/roms/*
 !screenshots/*
-NES/*.o
+NES/**/*.o
 MedNES
