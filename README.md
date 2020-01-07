@@ -1,6 +1,6 @@
 # MedNES
 MedNES is a cycle-accurate NES emulator written in C++.
-Supported mappers: NROM(0)
+Supported mappers: NROM(0), UNROM(2)
 
 ## Usage
 
