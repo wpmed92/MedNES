@@ -2,36 +2,69 @@
 MedNES is a cycle-accurate NES emulator written in C++.
 Supported mappers: NROM(0), UNROM(2)
 
-## Usage
+## Getting Started ##
+These instructions will get you a copy of the project up and running on your local machine.
 
+### Prerequisites ###
+* **[GIT](https://git-scm.com)**
+
+_For Debian, Ubuntu, Linux Mint and Elementary OS_
+```bash
+sudo apt-get install git
 ```
-git clone https://github.com/wpmed92/MedNES.git
-make
-./MedNES -insert <path/to/rom>
+
+_For ArchLinux and Manjaro_
+```bash
+sudo pacman -S git
 ```
 
-## Screenshots
+_For RHEL, Fedora and CentOS_
+```bash
+sudo yum install git
+```
 
-Super Mario Bros
+* **[libSDL2](https://www.libsdl.org/download-2.0.php)**
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png)
+_For Debian, Ubuntu, Linux Mint and Elementary OS_
+```bash
+sudo apt-get install libsdl2-2.0-0 libsdl2-dev
+```
 
-Donkey Kong
+_For ArchLinux and Manjaro_
+```bash
+sudo pacman -S libsdl2-2.0-0 libsdl2-dev
+```
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png)
+_For RHEL, Fedora and CentOS_
+```bash
+sudo yum install SDL2-devel
+```
 
-Bomberman
+### Cloning This Repository ###
+1. Open Terminal.
+2. Change the current working directory to the location where you want the cloned directory to be made.
+3. Type `git clone https://github.com/wpmed92/MedNES.git`
+4. Press Enter. *Your local clone will be created*.
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png)
+> **Build**
+>
+> `make`
 
-Pac-Man
+> **Execute**
+>
+> `./MedNES -insert <path/to/rom>`
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png)
+### Screenshots ###
 
-Battle City
+| | | |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png) Battle City |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png) Antarctic Adventure |
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png)
+### License ###
+>This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.
 
-Antarctic Adventure
+>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [MIT License](https://en.wikipedia.org/wiki/MIT_License) for more details.
 
-![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png)
+### Contributing Code ###
+_We'd love to accept your patches_! If you have improvements, send us your pull requests!
