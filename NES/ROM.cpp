@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include "Mapper/NROM.hpp"
+#include "Mapper/UnROM.hpp"
 
 void ROM::open(std::string filePath ) {
     std::ifstream in(filePath, std::ios::binary);
@@ -60,11 +62,11 @@ int ROM::getMirroring() {
 Mapper* ROM::getMapper() {
   switch (mapperNum) {
     case 0:
-      return new NROM(this);
-      break;
+      return new NROM(prgCode);
+     break;
 
     case 2:
-      return new UnROM(this);
+      return new UnROM(prgCode);
       break;
 
     default:

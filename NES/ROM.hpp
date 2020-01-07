@@ -6,8 +6,8 @@
 #include <vector>
 #include <bitset>
 #include "INESBus.hpp"
-#include "Mapper/NROM.hpp"
-#include "Mapper/UnROM.hpp"
+
+class Mapper;
 
 struct INESHeader {
     //Header 16 byte

@@ -2,7 +2,7 @@
 #include <chrono>
 #include <SDL2/SDL.h>
 #include "ROM.hpp"
-#include "Mapper/Mapper.hpp"
+#include "Mapper/NROM.hpp"
 #include "6502.hpp"
 #include "PPU.hpp"
 #include "Controller.hpp"
@@ -57,6 +57,12 @@ int main(int argc, char ** argv) {
     rom.open(romPath);
     rom.printHeader();
     Mapper* mapper = rom.getMapper();
+
+    if (mapper == NULL) {
+        std::cout << "Unknown mapper.";
+        return 1;
+    }
+
     PPU ppu = PPU(&rom);
     Controller controller;
     CPU6502 cpu = CPU6502(mapper, &ppu, &controller);

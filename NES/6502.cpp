@@ -509,11 +509,7 @@ uint8_t* CPU6502::memoryAccess(MemoryAccessMode mode, uint16_t address, uint8_t 
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
     } else if (address >= 0x8000 && address <= 0xFFFF) {
-        if (mode == MemoryAccessMode::READ) {
-            readData = mapper->read(address);
-        } else {
-            mapper->write(address, data);
-        }
+        readData = mapper->read(address);
     }
     
     tick();
