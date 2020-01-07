@@ -63,7 +63,7 @@ Mapper* ROM::getMapper() {
   switch (mapperNum) {
     case 0:
       return new NROM(prgCode);
-     break;
+      break;
 
     case 2:
       return new UnROM(prgCode);
