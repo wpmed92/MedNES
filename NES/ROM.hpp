@@ -1,5 +1,4 @@
-#ifndef ROM_hpp
-#define ROM_hpp
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -7,6 +6,8 @@
 #include <vector>
 #include <bitset>
 #include "INESBus.hpp"
+
+class Mapper;
 
 struct INESHeader {
     //Header 16 byte
@@ -30,21 +31,22 @@ private:
     std::vector<uint8_t> chrData;
     uint8_t chrRAM[8192];
     int mirroring;
+    uint8_t mapperNum;
     
 public:
     std::vector<uint8_t> getChrData() { return chrData; };
+    std::vector<uint8_t> getPrgCode() { return prgCode; };
     void open(std::string);
     void printHeader();
     void loadTestProgramcode(std::vector<uint8_t>);
     int getMirroring();
+    Mapper* getMapper();
     
     //cpu address space
     uint8_t* read(uint16_t address);
     void write(uint16_t address, uint8_t data);
-    
+
     //ppu address space
     uint8_t ppuread(uint16_t address);
     void ppuwrite(uint16_t address, uint8_t data);
 };
-
-#endif /* ROM_hpp */

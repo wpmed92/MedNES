@@ -2,6 +2,7 @@
 #include <chrono>
 #include <SDL2/SDL.h>
 #include "ROM.hpp"
+#include "Mapper/NROM.hpp"
 #include "6502.hpp"
 #include "PPU.hpp"
 #include "Controller.hpp"
@@ -55,9 +56,16 @@ int main(int argc, char ** argv) {
     ROM rom;
     rom.open(romPath);
     rom.printHeader();
+    Mapper* mapper = rom.getMapper();
+
+    if (mapper == NULL) {
+        std::cout << "Unknown mapper.";
+        return 1;
+    }
+
     PPU ppu = PPU(&rom);
     Controller controller;
-    CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
+    CPU6502 cpu = CPU6502(mapper, &ppu, &controller);
     cpu.reset();
     SDL_Texture * texture = SDL_CreateTexture(s, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 240);
 

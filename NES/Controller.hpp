@@ -1,11 +1,10 @@
-#ifndef Controller_hpp
-#define Controller_hpp
+#pragma once
 
 #include <stdio.h>
 #include <string>
 #include "INESBus.hpp"
-
 #include <SDL2/SDL.h>
+
 class Controller : INESBus {
     uint8_t JOY1 = 0;
     uint8_t JOY2 = 0;
@@ -22,4 +21,3 @@ public:
     void setButtonPressed(SDL_Keycode, bool);
     
 };
-#endif /* Controller_hpp */
