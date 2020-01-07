@@ -59,7 +59,7 @@ sudo yum install SDL2-devel
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
 |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
-|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png) Battle City |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png) Antarctic Adventure |
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Battle%20City.png) Battle City |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Antarctic%20Adventure.png) Antarctic Adventure | |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Prince%20of%20Persia.png) Prince of Persia |
 
 ### License ###
 >This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.
