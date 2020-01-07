@@ -2,3 +2,4 @@ NES/roms/*
 !screenshots/*
 NES/**/*.o
 MedNES
+.vscode
