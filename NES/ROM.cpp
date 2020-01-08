@@ -10,13 +10,13 @@ void ROM::open(std::string filePath ) {
     
     //Read header
     in.read(reinterpret_cast<char*>(&header.nes), sizeof(char[4]));
-    in.read(reinterpret_cast<char*>(&header.prgIn16kb), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.chrIn8kb), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.flags6), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.flags7), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.prgRamIn8kb), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.flags9), sizeof(uint8_t));
-    in.read(reinterpret_cast<char*>(&header.flags10), sizeof(uint8_t));
+    in.read(reinterpret_cast<char*>(&header.prgIn16kb), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.chrIn8kb), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.flags6), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.flags7), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.prgRamIn8kb), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.flags9), sizeof(u8));
+    in.read(reinterpret_cast<char*>(&header.flags10), sizeof(u8));
     in.read(reinterpret_cast<char*>(&header.zeros), sizeof(char[5]));
     
     trainer.reserve(512);
@@ -51,7 +51,7 @@ void ROM::printHeader() {
     std::cout << "Flags 7: " << flags7Bits << "\n";
 }
 
-void ROM::loadTestProgramcode(std::vector<uint8_t> code) {
+void ROM::loadTestProgramcode(std::vector<u8> code) {
     prgCode.insert(prgCode.end(), code.begin(), code.end());
 }
 
@@ -77,17 +77,17 @@ Mapper* ROM::getMapper() {
 }
 
 //cpu bus
-uint8_t* ROM::read(uint16_t address) {
+u8* ROM::read(u16 address) {
     address = (address - 0x8000) % prgCode.size();
     return &prgCode[address];
 }
 
-void ROM::write(uint16_t address, uint8_t data) {
+void ROM::write(u16 address, u8 data) {
     //EXCEPTION: READONLY
 }
 
 //ppu bus
-uint8_t ROM::ppuread(uint16_t address) {
+u8 ROM::ppuread(u16 address) {
     if (header.chrIn8kb == 0) {
         return chrRAM[address];
     } else {
@@ -95,7 +95,7 @@ uint8_t ROM::ppuread(uint16_t address) {
     }
 }
 
-void ROM::ppuwrite(uint16_t address, uint8_t data) {
+void ROM::ppuwrite(u16 address, u8 data) {
     if (header.chrIn8kb == 0) {
         chrRAM[address] = data;
     }

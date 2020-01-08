@@ -12,13 +12,13 @@ class Mapper;
 struct INESHeader {
     //Header 16 byte
     char nes[4];
-    uint8_t prgIn16kb;
-    uint8_t chrIn8kb;
-    uint8_t flags6;
-    uint8_t flags7;
-    uint8_t prgRamIn8kb;
-    uint8_t flags9;
-    uint8_t flags10;
+    u8 prgIn16kb;
+    u8 chrIn8kb;
+    u8 flags6;
+    u8 flags7;
+    u8 prgRamIn8kb;
+    u8 flags9;
+    u8 flags10;
     char zeros[5];
 };
 
@@ -26,27 +26,27 @@ class ROM : public INESBus {
     
 private:
     INESHeader header;
-    std::vector<uint8_t> trainer;
-    std::vector<uint8_t> prgCode;
-    std::vector<uint8_t> chrData;
-    uint8_t chrRAM[8192];
+    std::vector<u8> trainer;
+    std::vector<u8> prgCode;
+    std::vector<u8> chrData;
+    u8 chrRAM[8192];
     int mirroring;
-    uint8_t mapperNum;
+    u8 mapperNum;
     
 public:
-    std::vector<uint8_t> getChrData() { return chrData; };
-    std::vector<uint8_t> getPrgCode() { return prgCode; };
+    std::vector<u8> getChrData() { return chrData; };
+    std::vector<u8> getPrgCode() { return prgCode; };
     void open(std::string);
     void printHeader();
-    void loadTestProgramcode(std::vector<uint8_t>);
+    void loadTestProgramcode(std::vector<u8>);
     int getMirroring();
     Mapper* getMapper();
     
     //cpu address space
-    uint8_t* read(uint16_t address);
-    void write(uint16_t address, uint8_t data);
+    u8* read(u16 address);
+    void write(u16 address, u8 data);
 
     //ppu address space
-    uint8_t ppuread(uint16_t address);
-    void ppuwrite(uint16_t address, uint8_t data);
+    u8 ppuread(u16 address);
+    void ppuwrite(u16 address, u8 data);
 };
