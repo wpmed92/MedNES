@@ -145,21 +145,21 @@ inline void PPU::fetchTiles() {
     } else if (cycle == 3) {
         attrbyte = ppuread(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
     } else if (cycle == 5) {
-        uint16_t patterAddr =
-        (((uint16_t) ppuctrl & 0x10) << 8) +
-        ((uint16_t) ntbyte << 4) +
+        u16 patterAddr =
+        (((u16) ppuctrl & 0x10) << 8) +
+        ((u16) ntbyte << 4) +
         ((v & 0x7000) >> 12);
         patternlow = ppuread(patterAddr);
     } else if (cycle == 7) {
-        uint16_t patterAddr =
-        (((uint16_t) ppuctrl & 0x10) << 8) +
-         ((uint16_t) ntbyte << 4) +
+        u16 patterAddr =
+        (((u16) ppuctrl & 0x10) << 8) +
+         ((u16) ntbyte << 4) +
          ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
     } else if (cycle == 0) {
-        uint8_t quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
-        uint8_t attr_bits1 = (attrbyte >> quadrant_num) & 1;
-        uint8_t attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
+        u8 quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
+        u8 attr_bits1 = (attrbyte >> quadrant_num) & 1;
+        u8 attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
         attrShiftReg1 |= attr_bits1 ? 255 : 0;
         attrShiftReg2 |= attr_bits2 ? 255 : 0;
         
@@ -168,7 +168,6 @@ inline void PPU::fetchTiles() {
         }
         
         xIncrement();
-        
     }
 }
 
@@ -178,21 +177,21 @@ inline void PPU::emitPixel() {
     }
     
     //Bg
-    uint16_t fineSelect = 0x8000 >> x;
-    uint16_t pixel1 = (bgShiftRegLo & fineSelect) << x;
-    uint16_t pixel2 = (bgShiftRegHi & fineSelect) << x;
-    uint16_t pixel3 = (attrShiftReg1 & fineSelect) << x;
-    uint16_t pixel4 = (attrShiftReg2 & fineSelect) << x;
-    uint8_t bgBit12 = (pixel2 >> 14) | (pixel1 >> 15);
+    u16 fineSelect = 0x8000 >> x;
+    u16 pixel1 = (bgShiftRegLo & fineSelect) << x;
+    u16 pixel2 = (bgShiftRegHi & fineSelect) << x;
+    u16 pixel3 = (attrShiftReg1 & fineSelect) << x;
+    u16 pixel4 = (attrShiftReg2 & fineSelect) << x;
+    u8 bgBit12 = (pixel2 >> 14) | (pixel1 >> 15);
     
     //Sprites
-    uint8_t spritePixel1 = 0;
-    uint8_t spritePixel2 = 0;
-    uint8_t spritePixel3 = 0;
-    uint8_t spritePixel4 = 0;
-    uint8_t spriteBit12 = 0;
-    uint8_t paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
-    uint8_t spritePaletteIndex = 0;
+    u8 spritePixel1 = 0;
+    u8 spritePixel2 = 0;
+    u8 spritePixel3 = 0;
+    u8 spritePixel4 = 0;
+    u8 spriteBit12 = 0;
+    u8 paletteIndex = 0 | (pixel4 >> 12) | (pixel3 >> 13) | (pixel2 >> 14) | (pixel1 >> 15);
+    u8 spritePaletteIndex = 0;
     bool showSprite = false;
     bool spriteFound = false;
     
@@ -231,22 +230,18 @@ inline void PPU::emitPixel() {
     }
     
     if (showSprite) {
-        uint8_t p = ppuread(0x3F00 | spritePaletteIndex) * 3;
-        uint8_t r = palette[p];
-        uint8_t g = palette[p + 1];
-        uint8_t b = palette[p + 2];
+        u8 p = ppuread(0x3F00 | spritePaletteIndex) * 3;
+        u8 r = palette[p];
+        u8 g = palette[p + 1];
+        u8 b = palette[p + 2];
         buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
     } else {
-        uint8_t p = ppuread(0x3F00 | paletteIndex) * 3;
-        uint8_t r = palette[p];
-        uint8_t g = palette[p + 1];
-        uint8_t b = palette[p + 2];
+        u8 p = ppuread(0x3F00 | paletteIndex) * 3;
+        u8 r = palette[p];
+        u8 g = palette[p + 1];
+        u8 b = palette[p + 2];
         buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
     }
-}
-
-uint8_t mux(uint8_t bg, uint8_t sprite) {
-    return 0;
 }
 
 inline void PPU::copyHorizontalBits() {
@@ -275,7 +270,7 @@ bool PPU::genNMI() {
     
 }
 
-uint8_t* PPU::read(uint16_t address) {
+u8* PPU::read(u16 address) {
     address %= 8;
     
     if (address == 0) {
@@ -309,11 +304,11 @@ uint8_t* PPU::read(uint16_t address) {
     return nullptr;
 }
 
-void PPU::write(uint16_t address, uint8_t data) {
+void PPU::write(u16 address, u8 data) {
     address %= 8;
     
     if (address == 0) {
-        t = (t & 0xF3FF) | (((uint16_t) data & 0x03) << 10);
+        t = (t & 0xF3FF) | (((u16) data & 0x03) << 10);
         spriteHeight = (data & 0x20) ? 16 : 8;
         ppuctrl = data;
     } else if (address == 1) {
@@ -329,13 +324,13 @@ void PPU::write(uint16_t address, uint8_t data) {
     } else if (address == 5) {
         if (w == 0) {
             t &= 0x7FE0;
-            t |= ((uint16_t) data) >> 3;
+            t |= ((u16) data) >> 3;
             x = data & 7;
             w = 1;
         } else {
             t &= ~0x73E0;
-            t |= ((uint16_t) data & 0x07) << 12;
-            t |= ((uint16_t) data & 0xF8) << 2;
+            t |= ((u16) data & 0x07) << 12;
+            t |= ((u16) data & 0xF8) << 2;
             w = 0;
         }
         
@@ -343,7 +338,7 @@ void PPU::write(uint16_t address, uint8_t data) {
     } else if (address == 6) {
         if (w == 0) {
             t &= 255;
-            t |= ((uint16_t)data & 0x3F) << 8;
+            t |= ((u16)data & 0x3F) << 8;
             w = 1;
         } else {
             t &= 0xFF00;
@@ -359,7 +354,7 @@ void PPU::write(uint16_t address, uint8_t data) {
     }
 }
 
-uint8_t PPU::ppuread(uint16_t address) {
+u8 PPU::ppuread(u16 address) {
     switch (address) {
         case 0x0000 ... 0x1FFF:
             return rom->ppuread(address);
@@ -412,7 +407,7 @@ uint8_t PPU::ppuread(uint16_t address) {
     }
 }
 
-void PPU::ppuwrite(uint16_t address, uint8_t data) {
+void PPU::ppuwrite(u16 address, u8 data) {
     switch (address) {
         case 0x0000 ... 0x1FFF:
             rom->ppuwrite(address, data);
@@ -459,7 +454,7 @@ void PPU::ppuwrite(uint16_t address, uint8_t data) {
     }
 }
 
-void PPU::copyOAM(uint8_t oamEntry, int index) {
+void PPU::copyOAM(u8 oamEntry, int index) {
     int oamSelect = index / 4;
     int property = index % 4;
     
@@ -621,8 +616,8 @@ void PPU::evalSprites() {
     }
 }
 
-uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
-    uint16_t addr = 0;
+u16 PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
+    u16 addr = 0;
     
     if (spriteHeight == 8) {
         int fineOffset = scanLine - sprite.y;
@@ -630,8 +625,8 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically)
         if (flipVertically)
             fineOffset = spriteHeight-1 - fineOffset;
         
-        addr = (((uint16_t) ppuctrl & 8) << 9) |
-        ((uint16_t) sprite.tileNum << 4) |
+        addr = (((u16) ppuctrl & 8) << 9) |
+        ((u16) sprite.tileNum << 4) |
         fineOffset;
     } else {
         
@@ -639,8 +634,8 @@ uint16_t PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically)
         
         if (flipVertically)
             fineOffset = spriteHeight-1 - fineOffset;
-        addr = (((uint16_t) sprite.tileNum & 1) << 12) |
-        ((uint16_t) ((sprite.tileNum & ~1) << 4)) |
+        addr = (((u16) sprite.tileNum & 1) << 12) |
+        ((u16) ((sprite.tileNum & ~1) << 4)) |
         fineOffset;
     }
     

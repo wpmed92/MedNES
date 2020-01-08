@@ -8,7 +8,7 @@
 
 #include "Controller.hpp"
 
-uint8_t* Controller::read(uint16_t address) {
+u8* Controller::read(u16 address) {
     if (address == 0x4016) {
         JOY1 = 0x40 | (btnState & 1);
         
@@ -25,7 +25,7 @@ uint8_t* Controller::read(uint16_t address) {
     }
 }
 
-void Controller::write(uint16_t address, uint8_t data) {
+void Controller::write(u16 address, u8 data) {
     if (address == 0x4016) {
         if (strobe && !(data & 0x1)) {
             btnStateLocked = btnState;

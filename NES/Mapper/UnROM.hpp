@@ -4,14 +4,14 @@
 
 class UnROM : public Mapper {
   private:
-    uint8_t bankSelect = 0;
-    uint32_t lastBankStart = 0;
+    u8 bankSelect = 0;
+    u32 lastBankStart = 0;
 
   public:
-    UnROM(std::vector<uint8_t> &prgCode) : Mapper(prgCode) { 
+    UnROM(std::vector<u8> &prgCode) : Mapper(prgCode) { 
       lastBankStart = prgCode.size() - 16384;
     }
     ~UnROM() override = default;
-    uint8_t* read(uint16_t address) override;
-    void write(uint16_t address, uint8_t data) override;
+    u8* read(u16 address) override;
+    void write(u16 address, u8 data) override;
 };

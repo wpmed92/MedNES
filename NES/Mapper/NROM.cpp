@@ -1,10 +1,10 @@
 #include "NROM.hpp"
 
-uint8_t* NROM::read(uint16_t address) {
+u8* NROM::read(u16 address) {
     address = (address - 0x8000) % prgCode.size();
     return &prgCode[address];
 }
 
-void NROM::write(uint16_t address, uint8_t data) {
+void NROM::write(u16 address, u8 data) {
  //No write in NROM
 }

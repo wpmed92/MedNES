@@ -2,20 +2,21 @@
 
 #include <stdio.h>
 #include <string>
-#include "INESBus.hpp"
 #include <SDL2/SDL.h>
+#include "INESBus.hpp"
+#include "Common/Typedefs.hpp"
 
 class Controller : INESBus {
-    uint8_t JOY1 = 0;
-    uint8_t JOY2 = 0;
-    uint8_t btnStateLocked = 0;
-    uint8_t btnState = 0;
+    u8 JOY1 = 0;
+    u8 JOY2 = 0;
+    u8 btnStateLocked = 0;
+    u8 btnState = 0;
     bool strobe;
     
 public:
     //Bus
-    uint8_t* read(uint16_t address);
-    void write(uint16_t address, uint8_t data);
+    u8* read(u16 address);
+    void write(u16 address, u8 data);
     
     //Input
     void setButtonPressed(SDL_Keycode, bool);
