@@ -22,14 +22,13 @@ struct INESHeader {
     char zeros[5];
 };
 
-class ROM : public INESBus {
+class ROM {
     
 private:
     INESHeader header;
     std::vector<u8> trainer;
     std::vector<u8> prgCode;
     std::vector<u8> chrData;
-    u8 chrRAM[8192];
     int mirroring;
     u8 mapperNum;
     
@@ -38,15 +37,6 @@ public:
     std::vector<u8> getPrgCode() { return prgCode; };
     void open(std::string);
     void printHeader();
-    void loadTestProgramcode(std::vector<u8>);
     int getMirroring();
     Mapper* getMapper();
-    
-    //cpu address space
-    u8* read(u16 address);
-    void write(u16 address, u8 data);
-
-    //ppu address space
-    u8 ppuread(u16 address);
-    void ppuwrite(u16 address, u8 data);
 };
