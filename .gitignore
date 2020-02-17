@@ -3,3 +3,4 @@ NES/roms/*
 NES/**/*.o
 MedNES
 .vscode
+.DS_Store

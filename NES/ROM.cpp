@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "Mapper/NROM.hpp"
 #include "Mapper/UnROM.hpp"
+#include "Mapper/CNROM.hpp"
 
 void ROM::open(std::string filePath ) {
     std::ifstream in(filePath, std::ios::binary);
@@ -36,6 +37,8 @@ void ROM::open(std::string filePath ) {
     
     if (header.chrIn8kb > 0) {
         in.read((char *)chrData.data(), header.chrIn8kb * 8192);
+    } else {
+        chrData = std::vector<u8>(8192, 0);
     }
 }
 
@@ -51,10 +54,6 @@ void ROM::printHeader() {
     std::cout << "Flags 7: " << flags7Bits << "\n";
 }
 
-void ROM::loadTestProgramcode(std::vector<u8> code) {
-    prgCode.insert(prgCode.end(), code.begin(), code.end());
-}
-
 int ROM::getMirroring() {
     return mirroring;
 }
@@ -62,41 +61,20 @@ int ROM::getMirroring() {
 Mapper* ROM::getMapper() {
   switch (mapperNum) {
     case 0:
-      return new NROM(prgCode);
-      break;
+        return new NROM(prgCode, chrData);
+        break;
 
     case 2:
-      return new UnROM(prgCode);
-      break;
+        return new UnROM(prgCode, chrData);
+        break;
+
+    case 3:
+        return new CNROM(prgCode, chrData);
+        break;
 
     default:
-      //Unsupported mapper:
-      return NULL;
-      break;
+        //Unsupported mapper:
+        return NULL;
+        break;
   }
-}
-
-//cpu bus
-u8* ROM::read(u16 address) {
-    address = (address - 0x8000) % prgCode.size();
-    return &prgCode[address];
-}
-
-void ROM::write(u16 address, u8 data) {
-    //EXCEPTION: READONLY
-}
-
-//ppu bus
-u8 ROM::ppuread(u16 address) {
-    if (header.chrIn8kb == 0) {
-        return chrRAM[address];
-    } else {
-        return chrData[address];
-    }
-}
-
-void ROM::ppuwrite(u16 address, u8 data) {
-    if (header.chrIn8kb == 0) {
-        chrRAM[address] = data;
-    }
 }

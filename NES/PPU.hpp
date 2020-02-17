@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "Common/Typedefs.hpp"
 #include "INESBus.hpp"
-#include "ROM.hpp"
+#include "Mapper/Mapper.hpp"
 
 struct Sprite {
     u8 y;
@@ -91,12 +91,13 @@ private:
     std::vector<SpriteRenderEntity> spriteRenderEntities;
 
     SpriteRenderEntity out;
-    ROM* rom;
+    Mapper* mapper;
     
     int scanLine = 0;
     int pixelIndex = 0;
     bool odd = false;
     bool nmiOccured = false;
+    int mirroring;
     
     //methods
     inline void copyHorizontalBits();
@@ -119,7 +120,7 @@ private:
 public:
     
     int dot = 0;
-    PPU(ROM* rom) : rom(rom) { buffer = new uint32_t[256*240]; };
+    PPU(Mapper* mapper) : mapper(mapper) { buffer = new uint32_t[256*240]; };
     
     //cpu address space
     u8* read(u16 address);
@@ -128,6 +129,7 @@ public:
     //ppu address space
     u8 ppuread(u16 address);
     void ppuwrite(u16 address, u8 data);
+    void setMirroring(int mirroring) { this->mirroring = mirroring; }
     
     void tick();
     void copyOAM(u8, int);
