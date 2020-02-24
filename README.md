@@ -7,38 +7,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites ###
 * **[GIT](https://git-scm.com)**
-
-_For Debian, Ubuntu, Linux Mint and Elementary OS_
-```bash
-sudo apt-get install git
-```
-
-_For ArchLinux and Manjaro_
-```bash
-sudo pacman -S git
-```
-
-_For RHEL, Fedora and CentOS_
-```bash
-sudo yum install git
-```
-
 * **[libSDL2](https://www.libsdl.org/download-2.0.php)**
-
-_For Debian, Ubuntu, Linux Mint and Elementary OS_
-```bash
-sudo apt-get install libsdl2-2.0-0 libsdl2-dev
-```
-
-_For ArchLinux and Manjaro_
-```bash
-sudo pacman -S libsdl2-2.0-0 libsdl2-dev
-```
-
-_For RHEL, Fedora and CentOS_
-```bash
-sudo yum install SDL2-devel
-```
 
 ### Cloning This Repository ###
 1. Open Terminal.
@@ -46,13 +15,21 @@ sudo yum install SDL2-devel
 3. Type `git clone https://github.com/wpmed92/MedNES.git`
 4. Press Enter. *Your local clone will be created*.
 
-> **Build**
->
-> `make`
+**Build with make**
 
-> **Execute**
->
-> `./MedNES -insert <path/to/rom>`
+`make`
+
+**Build with CMake** 
+
+```sh
+mkdir build && cd build
+cmake ../
+make
+```
+
+**Execute**
+
+`./MedNES -insert <path/to/rom>`
 
 ### Screenshots ###
 
