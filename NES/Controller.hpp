@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "INESBus.hpp"
 #include "Common/Typedefs.hpp"
 

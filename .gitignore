@@ -4,3 +4,4 @@ NES/**/*.o
 MedNES
 .vscode
 .DS_Store
+build
