@@ -11,7 +11,7 @@ void PPU::tick() {
                 ppustatus &= ~0x20;
                 ppustatus &= ~64;
             }
-            
+
             //copy vertical bits
             if (dot >= 280 && dot <= 304) {
                 copyVerticalBits();
@@ -24,7 +24,7 @@ void PPU::tick() {
              dot = 0;
              tick();
          }*/
-         
+
         if (scanLine >= 0 && scanLine <= 239) {
             evalSprites();
         }
@@ -32,14 +32,14 @@ void PPU::tick() {
         if (dot == 257) {
             copyHorizontalBits();
         }
-         
+
         //main hook: fetch tiles, emit pixel, shift
         if ((dot >= 1 && dot <= 257) || (dot >= 321 && dot <= 337)) {
             //reload shift registers and shift
             if ((dot >= 2 && dot <= 257) || (dot >= 322 && dot <= 337)) {
                 reloadShiftersAndShift();
             }
-            
+
             //if on visible scanlines and dots
             //eval sprites
             //emit pixels
@@ -48,11 +48,11 @@ void PPU::tick() {
                     if (scanLine > 0) {
                         decrementSpriteCounters();
                     }
-                    
+
                     emitPixel();
                 }
             }
-            
+
             //fetch nt, at, pattern low - high
             fetchTiles();
         }
@@ -60,7 +60,7 @@ void PPU::tick() {
         if (scanLine == 240 && dot == 0) {
             generateFrame = true;
         }
-        
+
         if (scanLine == 241 && dot == 1) {
             //set vbl flag
             ppustatus |= 0x80;
@@ -71,7 +71,7 @@ void PPU::tick() {
             }
         }
     }
-    
+
     if (dot == 340) {
         scanLine = (scanLine+1) % 262;
         if (scanLine == 0) {
@@ -98,7 +98,7 @@ inline void PPU::yIncrement() {
     } else {
         v &= ~0x7000;
         int y = (v & 0x03E0) >> 5;
-        
+
         if (y == 29) {
             y = 0;
             v ^= 0x0800;
@@ -107,7 +107,7 @@ inline void PPU::yIncrement() {
         } else {
             y += 1;
         }
-        
+
         v = (v & ~0x03E0) | (y << 5);
     }
 }
@@ -116,12 +116,12 @@ inline void PPU::reloadShiftersAndShift() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     if (dot % 8 == 1) {
         bgShiftRegLo |= patternlow;
         bgShiftRegHi |= patternhigh;
     }
-    
+
     bgShiftRegLo <<= 1;
     bgShiftRegHi <<= 1;
     attrShiftReg1 <<= 1;
@@ -137,9 +137,9 @@ inline void PPU::fetchTiles() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     int cycle = dot % 8 ;
-    
+
     if (cycle == 1) {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
     } else if (cycle == 3) {
@@ -162,11 +162,11 @@ inline void PPU::fetchTiles() {
         u8 attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
         attrShiftReg1 |= attr_bits1 ? 255 : 0;
         attrShiftReg2 |= attr_bits2 ? 255 : 0;
-        
+
         if (dot == 256) {
             yIncrement();
         }
-        
+
         xIncrement();
     }
 }
@@ -175,7 +175,7 @@ inline void PPU::emitPixel() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     //Bg
     u16 fineSelect = 0x8000 >> x;
     u16 pixel1 = (bgShiftRegLo & fineSelect) << x;
@@ -183,7 +183,7 @@ inline void PPU::emitPixel() {
     u16 pixel3 = (attrShiftReg1 & fineSelect) << x;
     u16 pixel4 = (attrShiftReg2 & fineSelect) << x;
     u8 bgBit12 = (pixel2 >> 14) | (pixel1 >> 15);
-    
+
     //Sprites
     u8 spritePixel1 = 0;
     u8 spritePixel2 = 0;
@@ -194,26 +194,26 @@ inline void PPU::emitPixel() {
     u8 spritePaletteIndex = 0;
     bool showSprite = false;
     bool spriteFound = false;
-    
+
     for (int i = 0; i < spriteRenderEntities.size(); i++) {
         if (spriteRenderEntities[i].isActive) {
             SpriteRenderEntity &sprite = spriteRenderEntities[i];
-            
+
             if (spriteFound) {
                 sprite.shift();
                 continue;
             }
-            
+
             spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
             spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
             spritePixel3 = sprite.attr & 1;
             spritePixel4 = sprite.attr & 2;
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
-            
+
             if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
                 ppustatus |= 64;
             }
-            
+
             if (spriteBit12) {
                 showSprite = ((spriteBit12 && bgBit12 && !(sprite.attr & 32)) || (spriteBit12 && !bgBit12)) && (ppumask & 16);
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
@@ -223,32 +223,24 @@ inline void PPU::emitPixel() {
             sprite.shift();
         }
     }
-    
+
     //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
-    
-    if (showSprite) {
-        u8 p = ppuread(0x3F00 | spritePaletteIndex) * 3;
-        u8 r = palette[p];
-        u8 g = palette[p + 1];
-        u8 b = palette[p + 2];
-        buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
-    } else {
-        u8 p = ppuread(0x3F00 | paletteIndex) * 3;
-        u8 r = palette[p];
-        u8 g = palette[p + 1];
-        u8 b = palette[p + 2];
-        buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
-    }
+
+    u8 p = ppuread(0x3F00 | showSprite ? spritePaletteIndex : paletteIndex) * 3;
+    u8 r = palette[p];
+    u8 g = palette[p + 1];
+    u8 b = palette[p + 2];
+    buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
 }
 
 inline void PPU::copyHorizontalBits() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     v = (v & ~0x41F) | (t & 0x41F);
 }
 
@@ -256,7 +248,7 @@ inline void PPU::copyVerticalBits() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     v = (v & ~0x7BE0) | (t & 0x7BE0);
 }
 
@@ -267,12 +259,12 @@ bool PPU::genNMI() {
     } else {
         return false;
     }
-    
+
 }
 
 u8* PPU::read(u16 address) {
     address %= 8;
-    
+
     if (address == 0) {
         return &ppuctrl;
     } else if (address == 1) {
@@ -288,25 +280,25 @@ u8* PPU::read(u16 address) {
         return &oamdata;
     } else if (address == 7) {
         ppu_read_buffer = ppu_read_buffer_cpy;
-        
+
         if (v >= 0x3F00 && v <= 0x3FFF) {
             ppu_read_buffer_cpy = ppuread(v - 0x1000);
             ppu_read_buffer = ppuread(v);
         } else {
             ppu_read_buffer_cpy = ppuread(v);
         }
-        
+
         v += ((ppuctrl & 4) ? 32 : 1);
         v%=16384;
         return &ppu_read_buffer;
     }
-    
+
     return nullptr;
 }
 
 void PPU::write(u16 address, u8 data) {
     address %= 8;
-    
+
     if (address == 0) {
         t = (t & 0xF3FF) | (((u16) data & 0x03) << 10);
         spriteHeight = (data & 0x20) ? 16 : 8;
@@ -333,7 +325,7 @@ void PPU::write(u16 address, u8 data) {
             t |= ((u16) data & 0xF8) << 2;
             w = 0;
         }
-        
+
         ppuscroll = data;
     } else if (address == 6) {
         if (w == 0) {
@@ -379,14 +371,14 @@ u8 PPU::ppuread(u16 address) {
                     address -= 0x800;
                 }
             }
-        
+
             return vram[address - 0x2000];
             break;
         case 0x3F00 ... 0x3F0F:
             if (address == 0x3F04 || address == 0x3F08 || address == 0x3F0C) {
                 address = 0x3F00;
             }
-            
+
             return bg_palette[address - 0x3F00];
             break;
         case 0x3F10 ... 0x3F1F:
@@ -395,7 +387,7 @@ u8 PPU::ppuread(u16 address) {
             } else {
                 return sprite_palette[address - 0x3F10];
             }
-            
+
             return 1;
             break;
         case 0x3000 ... 0x3EFF:
@@ -444,7 +436,7 @@ void PPU::ppuwrite(u16 address, u8 data) {
             } else if (address >= 0x3F11 && address <= 0x3F1F) {
                 sprite_palette[address - 0x3F10] = data;
             }
-            
+
             break;
         case 0x3000 ... 0x3EFF:
             ppuwrite(address - 0x1000, data);
@@ -457,7 +449,7 @@ void PPU::ppuwrite(u16 address, u8 data) {
 void PPU::copyOAM(u8 oamEntry, int index) {
     int oamSelect = index / 4;
     int property = index % 4;
-    
+
     if (property == 0) {
         primaryOAM[oamSelect].y = oamEntry;
     } else if (property == 1) {
@@ -473,13 +465,13 @@ inline void PPU::decrementSpriteCounters() {
     if (isRenderingDisabled()) {
         return;
     }
-    
+
     for (int i = 0; i < spriteRenderEntities.size(); i++) {
         if (spriteRenderEntities.size() == 0)
             break;
         if (spriteRenderEntities[i].counter != 0) {
            spriteRenderEntities[i].counter--;
-            
+
             if (spriteRenderEntities[i].counter == 0) {
                 spriteRenderEntities[i].isActive = true;
             }
@@ -497,17 +489,17 @@ void PPU::evalSprites() {
         if (dot == 1) {
             secondaryOAMCursor = 0;
         }
-        
+
         secondaryOAM[secondaryOAMCursor].attr = 0xFF;
         secondaryOAM[secondaryOAMCursor].tileNum = 0xFF;
         secondaryOAM[secondaryOAMCursor].x = 0xFF;
         secondaryOAM[secondaryOAMCursor].y = 0xFF;
-        
+
         if (dot % 8 == 0) {
             secondaryOAMCursor++;
         }
     }
-    
+
     //sprite eval
     if (dot >= 65 && dot <= 256) {
         //Init
@@ -515,20 +507,20 @@ void PPU::evalSprites() {
             secondaryOAMCursor = 0;
             primaryOAMCursor = 0;
         }
-        
+
         if (secondaryOAMCursor == 8) {
             //ppustatus |= 0x20;
             return;
         }
-        
+
         if (primaryOAMCursor == 64) {
             return;
         }
-        
+
         //odd cycle read
         if ((dot % 2) == 1) {
             tmpOAM = primaryOAM[primaryOAMCursor];
-            
+
             if (inYRange(tmpOAM)) {
                 inRangeCycles--;
                 inRange = true;
@@ -554,24 +546,24 @@ void PPU::evalSprites() {
             }
         }
     }
-    
+
     //Sprite fetches
     if (dot >= 257 && dot <= 320) {
         if (dot == 257) {
             secondaryOAMCursor = 0;
             spriteRenderEntities.clear();
         }
-        
+
         Sprite sprite = secondaryOAM[secondaryOAMCursor];
-        
+
         int cycle = (dot-1) % 8;
-        
+
         switch (cycle) {
             case 0 ... 1:
                 if (!isUninit(sprite))
                     out = SpriteRenderEntity();
                 break;
-                
+
             case 2:
                 if (!isUninit(sprite)) {
                     out.attr = sprite.attr;
@@ -580,36 +572,36 @@ void PPU::evalSprites() {
                     out.id = sprite.id;
                 }
                 break;
-                
+
             case 3:
                 if (!isUninit(sprite))
                     out.counter = sprite.x;
                 break;
-                
+
             case 4:
                 if (!isUninit(sprite)) {
                     spritePatternLowAddr = getSpritePatternAddress(sprite, out.flipVertically);
                     out.lo = ppuread(spritePatternLowAddr);
                 }
                 break;
-                
+
             case 5:
                 break;
-                
+
             case 6:
                 if (!isUninit(sprite)) {
                     spritePatternHighAddr = spritePatternLowAddr + 8;
                     out.hi = ppuread(spritePatternHighAddr);
                 }
                 break;
-                
+
             case 7:
                 if (!isUninit(sprite))
                     spriteRenderEntities.push_back(out);
-                
+
                 secondaryOAMCursor++;
                 break;
-                
+
             default:
                 break;
         }
@@ -618,27 +610,27 @@ void PPU::evalSprites() {
 
 u16 PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
     u16 addr = 0;
-    
+
     if (spriteHeight == 8) {
         int fineOffset = scanLine - sprite.y;
-        
+
         if (flipVertically)
             fineOffset = spriteHeight-1 - fineOffset;
-        
+
         addr = (((u16) ppuctrl & 8) << 9) |
         ((u16) sprite.tileNum << 4) |
         fineOffset;
     } else {
-        
+
         int fineOffset = scanLine - sprite.y;
-        
+
         if (flipVertically)
             fineOffset = spriteHeight-1 - fineOffset;
         addr = (((u16) sprite.tileNum & 1) << 12) |
         ((u16) ((sprite.tileNum & ~1) << 4)) |
         fineOffset;
     }
-    
+
     return addr;
 }
 
