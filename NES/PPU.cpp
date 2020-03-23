@@ -228,8 +228,8 @@ inline void PPU::emitPixel() {
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
-
-    u8 p = ppuread(0x3F00 | showSprite ? spritePaletteIndex : paletteIndex) * 3;
+    
+    u8 p = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) * 3;
     u8 r = palette[p];
     u8 g = palette[p + 1];
     u8 b = palette[p + 2];
