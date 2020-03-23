@@ -11,7 +11,7 @@
 int main(int argc, char ** argv) {
     std::string romPath = "";
     std::string COMMAND_LINE_ERROR_MESSAGE = "Use -insert <path/to/rom> to start playing.";
-    bool fullscreen = true;
+    bool fullscreen = false;
 
     if (argc < 2) {
         std::cout << COMMAND_LINE_ERROR_MESSAGE << std::endl;
