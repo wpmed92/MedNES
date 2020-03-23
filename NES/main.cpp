@@ -6,10 +6,12 @@
 #include "6502.hpp"
 #include "PPU.hpp"
 #include "Controller.hpp"
+#include <map> 
 
 int main(int argc, char ** argv) {
     std::string romPath = "";
     std::string COMMAND_LINE_ERROR_MESSAGE = "Use -insert <path/to/rom> to start playing.";
+    bool fullscreen = true;
 
     if (argc < 2) {
         std::cout << COMMAND_LINE_ERROR_MESSAGE << std::endl;
@@ -25,9 +27,29 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
         std::cout << "SDL could not initialize." << SDL_GetError() << std::endl;
     }
+
+    SDL_GameController *con = nullptr;
+
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            con = SDL_GameControllerOpen(i);
+            std::cout << "Controller detected.";
+            break;
+        }
+    }
+
+    //TODO: Refactor me
+    std::map<int, int> map;
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_A, SDLK_a));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_B, SDLK_b));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_START, SDLK_RETURN));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_DPAD_UP, SDLK_UP));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_DPAD_DOWN, SDLK_DOWN));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_DPAD_LEFT, SDLK_LEFT));
+    map.insert(std::pair<int, int>(SDL_CONTROLLER_BUTTON_DPAD_RIGHT, SDLK_RIGHT));
     
     SDL_Window *window;
     std::string window_title = "MedNES";
@@ -45,6 +67,10 @@ int main(int argc, char ** argv) {
     if (window == NULL) {
         printf("Could not create window: %s\n", SDL_GetError());
         return 1;
+    }
+
+    if (fullscreen) {
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
     }
     
     bool is_running = true;
@@ -82,6 +108,12 @@ int main(int argc, char ** argv) {
             //Poll controller
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
+                    case SDL_CONTROLLERBUTTONDOWN:
+                        controller.setButtonPressed(map.find(event.cbutton.button)->second, true);
+                        break;
+                    case SDL_CONTROLLERBUTTONUP:
+                        controller.setButtonPressed(map.find(event.cbutton.button)->second, false);
+                        break;
                     case SDL_KEYDOWN:
                         controller.setButtonPressed(event.key.keysym.sym, true);
                         break;
