@@ -493,7 +493,7 @@ u8* CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
             } else {
                 ppu->write(address, data);
                 
-                for (int i = 0; i < 0xFF; i++) {
+                for (int i = 0; i < 256; i++) {
                     tick();
                     ppu->copyOAM(*read(data * 256 + i), i);
                 }
