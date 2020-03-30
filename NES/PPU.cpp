@@ -173,6 +173,7 @@ inline void PPU::fetchTiles() {
 
 inline void PPU::emitPixel() {
     if (isRenderingDisabled()) {
+        pixelIndex++;
         return;
     }
 
@@ -223,12 +224,13 @@ inline void PPU::emitPixel() {
             sprite.shift();
         }
     }
+    
 
     //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
-    
+
     u8 p = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) * 3;
     u8 r = palette[p];
     u8 g = palette[p + 1];
@@ -339,6 +341,7 @@ void PPU::write(u16 address, u8 data) {
 
             w = 0;
         }
+
     } else if (address == 7) {
         ppuwrite(v, data);
         v += ((ppuctrl & 4) ? 32 : 1);

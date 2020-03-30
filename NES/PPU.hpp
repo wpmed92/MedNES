@@ -120,7 +120,7 @@ private:
 public:
     
     int dot = 0;
-    PPU(Mapper* mapper) : mapper(mapper) { buffer = new uint32_t[256*240]; };
+    PPU(Mapper* mapper) : mapper(mapper) { };
     
     //cpu address space
     u8* read(u16 address);
@@ -137,5 +137,5 @@ public:
     void drawFrame();
     bool generateFrame;
     void printState();
-    uint32_t* buffer;
+    uint32_t buffer[256*240]  = { 0 };
 };
