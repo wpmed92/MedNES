@@ -225,17 +225,14 @@ inline void PPU::emitPixel() {
         }
     }
     
-
     //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
     }
-
-    u8 p = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) * 3;
-    u8 r = palette[p];
-    u8 g = palette[p + 1];
-    u8 b = palette[p + 2];
-    buffer[pixelIndex++] = 255 << 24 | r << 16 | g << 8 | b;
+    
+    u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
+    u8 p = (ppumask & 1) ? ((pindex & 0x30)*3) : (pindex * 3);
+    buffer[pixelIndex++] = 255 << 24 | (palette[p] << 16) | (palette[p + 1] << 8) | (palette[p + 2]); //ARGB
 }
 
 inline void PPU::copyHorizontalBits() {
@@ -285,7 +282,7 @@ u8* PPU::read(u16 address) {
 
         if (v >= 0x3F00 && v <= 0x3FFF) {
             ppu_read_buffer_cpy = ppuread(v - 0x1000);
-            ppu_read_buffer = ppuread(v);
+            ppu_read_buffer = (ppumask & 1) ? (ppuread(v) & 0x30) : ppuread(v);
         } else {
             ppu_read_buffer_cpy = ppuread(v);
         }
@@ -379,7 +376,7 @@ u8 PPU::ppuread(u16 address) {
             break;
         case 0x3F00 ... 0x3F0F:
             if (address == 0x3F04 || address == 0x3F08 || address == 0x3F0C) {
-                address = 0x3F00;
+               address = 0x3F00;
             }
 
             return bg_palette[address - 0x3F00];
