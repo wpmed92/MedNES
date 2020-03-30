@@ -35,7 +35,7 @@ make
 
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
-|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey%20Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey-Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
 |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Price%20of%20Persia.png) Prince of Persia |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Mega%20Man.png) Mega Man |
 
 ### License ###
