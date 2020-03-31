@@ -292,7 +292,7 @@ u8* PPU::read(u16 address) {
         return &ppu_read_buffer;
     }
 
-    return nullptr;
+    return &oamaddr;
 }
 
 void PPU::write(u16 address, u8 data) {
