@@ -38,10 +38,17 @@ make
 |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey-Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
 |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Price%20of%20Persia.png) Prince of Persia |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Mega%20Man.png) Mega Man |
 
-### License ###
+## Projects
+
+Here are some projects that build on top of MedNES:
+
+* **[nes-memoryviewer](https://github.com/sniklaus/nes-memoryview)**: This project is really interesting. It shows how each byte in the 2kB RAM changes over time. The other fun thing is that it runs in your browser by porting MedNES to asm.js with Emscripten. Give it a go!
+
+
+## License
 >This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.
 
 >This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [MIT License](https://en.wikipedia.org/wiki/MIT_License) for more details.
 
-### Contributing Code ###
+## Contributing Code
 _We'd love to accept your patches_! If you have improvements, send us your pull requests!
