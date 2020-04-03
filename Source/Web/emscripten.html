@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<link rel="stylesheet" type="text/css" href="http://content.sniklaus.com/content.css">
+		<script type="text/javascript" src="http://content.sniklaus.com/content.js"></script>
+	</head>
+	<body style="margin:0px auto 0px auto; max-width:620px;">
+
+<!-- ########################################################## -->
+
+<div class="btn-bar">
+	<a class="btn btn-primary" href="#">
+		<div><i class="fas fa-save"></i></div>
+		<span>Load</span>
+		<input id="input-rom" type="file" accept=".nes" style="bottom:0px; height:100%; left:0px; opacity:0.0; position:absolute; right:0px; top:0px; width:100%; z-index:1;" />
+	</a>
+
+	<a class="btn btn-primary" href="https://github.com/wpmed92/MedNES">
+		<div><i class="fab fa-github"></i></div>
+		<span>GitHub</span>
+	</a>
+</div>
+
+<div class="card">
+	<div class="card-body">
+		<div style="margin:0px auto 0px auto; max-width:100%; position:relative; width:512px;">
+			<canvas style="max-width:100%;"></canvas>
+
+			<div style="background-color:#FFFFFF; bottom:11px; font-size:10px; left:50%; margin:0px 0px 0px -142px; padding:0px 4px 0px 4px; position:absolute;">
+				use <b>arrow keys</b>, <b>enter</b> (start), <b>space</b> (select), <b>X</b> (A), and <b>C</b> (B)
+			</div>
+		</div>
+		<p>NES emulator by <a href="https://github.com/wpmed92">Ahmed Harmouche</a>, ported by <a href="https://github.com/sniklaus">Simon Niklaus</a></p>
+	</div>
+</div>
+
+<script type="text/javascript" src="emscripten.js"></script>
+<script type="text/javascript">
+	var intGamewidth = 512;
+	var intGameheight = 480;
+
+	jQuery(window.document)
+		.on('keydown', function(objEvent) {
+			if ([37, 38, 39, 40, 88, 67, 32, 13].indexOf(objEvent.keyCode) !== -1) {
+				objEvent.preventDefault();
+			}
+
+			window.Emscripten.key(1, objEvent.keyCode);
+		})
+		.on('keyup', function(objEvent) {
+			if ([37, 38, 39, 40, 88, 67, 32, 13].indexOf(objEvent.keyCode) !== -1) {
+				objEvent.preventDefault();
+			}
+
+			window.Emscripten.key(0, objEvent.keyCode);
+		})
+	;
+
+	jQuery('#input-rom')
+		.on('change', function() {
+			var objFilereader = new FileReader();
+			
+			objFilereader.onload = function(objEvent) {
+				Emscripten.FS.writeFile('/rom.nes', new Uint8Array(objEvent.target.result), {});
+
+				Emscripten.init('/rom.nes');
+			};
+			
+			if (this.files !== undefined) {
+				if (this.files.length === 1) {
+					objFilereader.readAsArrayBuffer(this.files[0]);
+				}
+			}
+		})
+	;
+
+	Emscripten().then(function(Module) {
+		window.Emscripten = Module;
+
+		window.Emscripten.init = Emscripten.cwrap('init', null, [ 'string' ]);
+		window.Emscripten.render = Emscripten.cwrap('render', null, [ 'number' ]);
+		window.Emscripten.key = Emscripten.cwrap('key', null, [ 'number', 'number' ]);
+
+		var objGamecanvas = jQuery('canvas').get(0);
+
+		objGamecanvas.width = intGamewidth;
+		objGamecanvas.height = intGameheight;
+
+		var objGamecontext = objGamecanvas.getContext('2d');
+		var objGamepixels = new Uint8Array(Emscripten.HEAPU8.buffer, Emscripten._malloc(intGamewidth * intGameheight * 4), intGamewidth * intGameheight * 4);
+
+		(function funcLoop() {
+			Emscripten.render(objGamepixels.byteOffset);
+			objGamecontext.putImageData(new ImageData(new Uint8ClampedArray(objGamepixels), intGamewidth, intGameheight), 0, 0);
+			window.requestAnimationFrame(funcLoop);
+		})();
+
+		(function funcLoad() {
+			var objRequest = new XMLHttpRequest();
+
+			objRequest.open('GET', 'https://content.sniklaus.com/nesmem/chase.nes', true);
+
+			objRequest.responseType = 'arraybuffer';
+
+			objRequest.onload = function() {
+				Emscripten.FS.writeFile('/rom.nes', new Uint8Array(objRequest.response), {});
+
+				Emscripten.init('/rom.nes');
+			};
+
+			objRequest.send();
+		})();
+	});
+</script>
+
+<!-- ########################################################## -->
+
+	</body>
+</html>

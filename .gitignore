@@ -1,7 +1,9 @@
-NES/roms/*
 !screenshots/*
-NES/**/*.o
+*.o
 MedNES
 .vscode
 .DS_Store
 build
+Source/Web/emscripten.js
+Source/Web/*.wasm
+
