@@ -1,12 +1,12 @@
 #include <iostream>
 #include <chrono>
 #include <SDL.h>
-#include "ROM.hpp"
-#include "Mapper/Mapper.hpp"
-#include "6502.hpp"
-#include "PPU.hpp"
-#include "Controller.hpp"
 #include <map> 
+#include "../Core/ROM.hpp"
+#include "../Core/Mapper/Mapper.hpp"
+#include "../Core/6502.hpp"
+#include "../Core/PPU.hpp"
+#include "../Core/Controller.hpp"
 
 int main(int argc, char ** argv) {
     std::string romPath = "";

@@ -2,6 +2,8 @@
 MedNES is a cycle-accurate NES emulator written in C++.
 Supported mappers: NROM(0), UNROM(2), CNROM(3)
 
+Try it out in your browser [here](https://wpmed92.github.io)!
+
 ## Getting Started ##
 These instructions will get you a copy of the project up and running on your local machine.
 
@@ -15,17 +17,9 @@ These instructions will get you a copy of the project up and running on your loc
 3. Type `git clone https://github.com/wpmed92/MedNES.git`
 4. Press Enter. *Your local clone will be created*.
 
-**Build with make**
+**Build**
 
 `make`
-
-**Build with CMake** 
-
-```sh
-mkdir build && cd build
-cmake ../
-make
-```
 
 **Execute**
 
@@ -42,7 +36,7 @@ make
 
 Here are some projects that build on top of MedNES:
 
-* **[nes-memoryviewer](https://github.com/sniklaus/nes-memoryview)**: This project is really interesting. It shows how each byte in the 2kB RAM changes over time. The other fun thing is that it runs in your browser by porting MedNES to asm.js with Emscripten. Give it a go!
+* **[nes-memoryview](https://github.com/sniklaus/nes-memoryview)**: This project is really interesting. It shows how each byte in the 2kB RAM changes over time. You can associate sprite movements with OAM bytes just by looking at the plots! Also, this is the project that enabled the web port!
 
 
 ## License

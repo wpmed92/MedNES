@@ -16,10 +16,10 @@
 	<a class="btn btn-primary" href="#">
 		<div><i class="fas fa-save"></i></div>
 		<span>Load</span>
-		<input type="file" accept=".nes" style="bottom:0px; height:100%; left:0px; opacity:0.0; position:absolute; right:0px; top:0px; width:100%; z-index:1;" />
+		<input id="input-rom" type="file" accept=".nes" style="bottom:0px; height:100%; left:0px; opacity:0.0; position:absolute; right:0px; top:0px; width:100%; z-index:1;" />
 	</a>
 
-	<a class="btn btn-primary" href="https://github.com/sniklaus/nes-memoryview">
+	<a class="btn btn-primary" href="https://github.com/wpmed92/MedNES">
 		<div><i class="fab fa-github"></i></div>
 		<span>GitHub</span>
 	</a>
@@ -34,10 +34,7 @@
 				use <b>arrow keys</b>, <b>enter</b> (start), <b>space</b> (select), <b>X</b> (A), and <b>C</b> (B)
 			</div>
 		</div>
-
-		<canvas style="display:block; margin:7px auto 7px auto; max-width:100%;"></canvas>
-
-		<input type="range" min="0" max="112" value="0" style="display:block; margin:0px auto 0px auto; max-width:100%; width:589px;" />
+		<p>NES emulator by <a href="https://github.com/wpmed92">Ahmed Harmouche</a>, ported by <a href="https://github.com/sniklaus">Simon Niklaus</a></p>
 	</div>
 </div>
 
@@ -45,14 +42,6 @@
 <script type="text/javascript">
 	var intGamewidth = 512;
 	var intGameheight = 480;
-
-	var intChartwidth = 593;
-	var intChartheight = 340;
-	var intCharthor = 30;
-	var intChartver = 15;
-	var intChartpadding = 5;
-	var intChartboundary = [238, 238, 238];
-	var intChartline = [0, 0, 0];
 
 	jQuery(window.document)
 		.on('keydown', function(objEvent) {
@@ -71,7 +60,7 @@
 		})
 	;
 
-	jQuery('input').eq(0)
+	jQuery('#input-rom')
 		.on('change', function() {
 			var objFilereader = new FileReader();
 			
@@ -81,9 +70,9 @@
 				Emscripten.init('/rom.nes');
 			};
 			
-			if (jQuery('input').eq(0).get(0).files !== undefined) {
-				if (jQuery('input').eq(0).get(0).files.length === 1) {
-					objFilereader.readAsArrayBuffer(jQuery('input').eq(0).get(0).files[0]);
+			if (this.files !== undefined) {
+				if (this.files.length === 1) {
+					objFilereader.readAsArrayBuffer(this.files[0]);
 				}
 			}
 		})
@@ -103,19 +92,6 @@
 
 		var objGamecontext = objGamecanvas.getContext('2d');
 		var objGamepixels = new Uint8Array(Emscripten.HEAPU8.buffer, Emscripten._malloc(intGamewidth * intGameheight * 4), intGamewidth * intGameheight * 4);
-
-		var objChartcanvas = jQuery('canvas').get(1);
-
-		objChartcanvas.width = intChartwidth;
-		objChartcanvas.height = intChartheight;
-
-		var objChartcontext = objChartcanvas.getContext('2d');
-		var objChartpixel = objChartcontext.createImageData(1, 1);
-
-		var objCpuram = new Uint8Array(Emscripten.HEAPU8.buffer, Emscripten._malloc(2048), 2048);
-		var objPpuram = new Uint8Array(Emscripten.HEAPU8.buffer, Emscripten._malloc(2048), 2048);
-
-		var objHistory = [];
 
 		(function funcLoop() {
 			Emscripten.render(objGamepixels.byteOffset);
