@@ -1,8 +1,8 @@
 #include "RAM.hpp"
 
-u8* RAM::read(u16 address) {
+u8 RAM::read(u16 address) {
     address %= 2048;
-    return &ram[address];
+    return ram[address];
 }
 
 void RAM::write(u16 address, u8 data) {

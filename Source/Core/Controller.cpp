@@ -8,20 +8,18 @@
 
 #include "Controller.hpp"
 
-u8* Controller::read(u16 address) {
+u8 Controller::read(u16 address) {
     if (address == 0x4016) {
-        JOY1 = 0x40 | (btnState & 1);
-        
         if (strobe) {
-            return &JOY1;
+            return 0x40 | (btnState & 1);
         }
         
         JOY1 = 0x80 | (btnStateLocked & 1);
         btnStateLocked >>= 1;
-        return &JOY1;
+        return JOY1;
     } else {
         //TODO: Implement JOY2
-        return &JOY2;
+        return JOY2;
     }
 }
 

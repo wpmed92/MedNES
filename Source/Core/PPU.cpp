@@ -196,10 +196,8 @@ inline void PPU::emitPixel() {
     bool showSprite = false;
     bool spriteFound = false;
 
-    for (int i = 0; i < spriteRenderEntities.size(); i++) {
-        if (spriteRenderEntities[i].isActive) {
-            SpriteRenderEntity &sprite = spriteRenderEntities[i];
-
+    for (auto& sprite : spriteRenderEntities) {
+        if (sprite.isActive) {
             if (spriteFound) {
                 sprite.shift();
                 continue;
@@ -261,22 +259,22 @@ bool PPU::genNMI() {
 
 }
 
-u8* PPU::read(u16 address) {
+u8 PPU::read(u16 address) {
     address %= 8;
 
     if (address == 0) {
-        return &ppuctrl;
+        return ppuctrl;
     } else if (address == 1) {
-        return &ppumask;
+        return ppumask;
     } else if (address == 2) {
         ppustatus_cpy = ppustatus;
         ppustatus &= ~0x80;
         w = 0;
-        return &ppustatus_cpy;
+        return ppustatus_cpy;
     } else if (address == 3) {
-        return &oamaddr;
+        return oamaddr;
     } else if (address == 4) {
-        return &oamdata;
+        return oamdata;
     } else if (address == 7) {
         ppu_read_buffer = ppu_read_buffer_cpy;
 
@@ -289,10 +287,10 @@ u8* PPU::read(u16 address) {
 
         v += ((ppuctrl & 4) ? 32 : 1);
         v%=16384;
-        return &ppu_read_buffer;
+        return ppu_read_buffer;
     }
 
-    return &oamaddr;
+    return 0;
 }
 
 void PPU::write(u16 address, u8 data) {
@@ -466,15 +464,9 @@ inline void PPU::decrementSpriteCounters() {
         return;
     }
 
-    for (int i = 0; i < spriteRenderEntities.size(); i++) {
-        if (spriteRenderEntities.size() == 0)
-            break;
-        if (spriteRenderEntities[i].counter != 0) {
-           spriteRenderEntities[i].counter--;
-
-            if (spriteRenderEntities[i].counter == 0) {
-                spriteRenderEntities[i].isActive = true;
-            }
+    for (auto& sprite : spriteRenderEntities) {
+        if (--sprite.counter == 0) {
+            sprite.isActive = true;
         }
     }
 }

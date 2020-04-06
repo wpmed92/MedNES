@@ -15,7 +15,7 @@ emcc -O3 -std=c++14 -I../Core -c -o ./build/Mapper.o ../Core/Mapper/Mapper.cpp
 emcc -O3 -std=c++14 -I../Core -c -o ./build/NROM.o ../Core/Mapper/NROM.cpp
 emcc -O3 -std=c++14 -I../Core -c -o ./build/UnROM.o ../Core/Mapper/UnROM.cpp
 
-emcc -O3 -std=c++14 -I../Core -c -o ./build/emscripten.o ./emscripten.cpp
+emcc -O3 -std=c++14 -I../Core -c -o ./build/Emscripten.o ./Emscripten.cpp
 
 emcc -O3 -std=c++14 --memory-init-file 0 -s WASM=1 --bind -s MODULARIZE=1 -s EXPORT_NAME="'Emscripten'" -s EXTRA_EXPORTED_RUNTIME_METHODS="['cwrap', 'FS', '_init', '_render', '_key']" ./build/*.o -o emscripten.js
 

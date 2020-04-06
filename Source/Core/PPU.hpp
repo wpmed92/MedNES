@@ -123,7 +123,7 @@ public:
     PPU(Mapper* mapper) : mapper(mapper) { };
     
     //cpu address space
-    u8* read(u16 address);
+    u8 read(u16 address);
     void write(u16 address, u8 data);
     
     //ppu address space

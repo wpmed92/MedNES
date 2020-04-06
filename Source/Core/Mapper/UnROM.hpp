@@ -12,6 +12,6 @@ class UnROM : public Mapper {
       lastBankStart = prgCode.size() - 16384;
     }
     ~UnROM() override = default;
-    u8* read(u16 address) override;
+    u8 read(u16 address) override;
     void write(u16 address, u8 data) override;
 };

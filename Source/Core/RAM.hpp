@@ -12,6 +12,6 @@ private:
     u8 ram[2048] = {0};
     
 public:
-    u8* read(u16 address);
+    u8 read(u16 address);
     void write(u16 address, u8 data);
 };
