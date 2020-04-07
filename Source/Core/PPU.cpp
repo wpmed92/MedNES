@@ -229,8 +229,8 @@ inline void PPU::emitPixel() {
     }
     
     u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
-    u8 p = (ppumask & 1) ? ((pindex & 0x30)*3) : (pindex * 3);
-    buffer[pixelIndex++] = 255 << 24 | (palette[p] << 16) | (palette[p + 1] << 8) | (palette[p + 2]); //ARGB
+    u8 p = (ppumask & 1) ? (pindex & 0x30) : pindex;
+    buffer[pixelIndex++] = palette[p];
 }
 
 inline void PPU::copyHorizontalBits() {
@@ -632,8 +632,4 @@ bool PPU::inYRange(const Sprite& oam) {
 
 void PPU::printState() {
     std::cout << "scanline=" << unsigned(scanLine) << ", " << unsigned(dot) << std::endl << std::endl;
-}
-
-bool PPU::inVBlank() {
-    return (scanLine >= 241 && scanLine <= 260);
 }

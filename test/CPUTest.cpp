@@ -55,10 +55,19 @@ ExecutionState* CPUTest::parseExecutionStateFromLogLine(std::string line) {
 
 void CPUTest::runTest(std::string testROMPath, std::string testLogPath) {
     ROM rom;
-    rom.open(testROMPath);
-    PPU ppu = PPU(&rom);
+    rom.open(romPath);
+    rom.printHeader();
+    Mapper* mapper = rom.getMapper();
+
+    if (mapper == NULL) {
+        std::cout << "Unknown mapper.";
+        return 1;
+    }
+
+    PPU ppu = PPU(mapper);
+    ppu.setMirroring(rom.getMirroring());
     Controller controller;
-    CPU6502 cpu = CPU6502(&rom, &ppu, &controller);
+    CPU6502 cpu = CPU6502(mapper, &ppu, &controller);
     cpu.setProgramCounter(0xC000);
     
     ExecutionState* expectedExecutionState;
