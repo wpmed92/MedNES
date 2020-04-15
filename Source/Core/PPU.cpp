@@ -203,18 +203,19 @@ inline void PPU::emitPixel() {
                 continue;
             }
 
+            bool opaqueSprite = (sprite.hi & 1) || (sprite.lo & 1) || (sprite.lo & 128) || (sprite.hi & 128);
             spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
             spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
             spritePixel3 = sprite.attr & 1;
             spritePixel4 = sprite.attr & 2;
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
 
-            if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
+            if (!(ppustatus & 64) && opaqueSprite && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
                 ppustatus |= 64;
             }
 
             if (spriteBit12) {
-                showSprite = ((spriteBit12 && bgBit12 && !(sprite.attr & 32)) || (spriteBit12 && !bgBit12)) && (ppumask & 16);
+                showSprite = (bgBit12 && !(sprite.attr & 32)) || (!bgBit12 && (ppumask & 16));
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
                 spriteFound = true;
             }
@@ -274,7 +275,7 @@ u8 PPU::read(u16 address) {
     } else if (address == 3) {
         return oamaddr;
     } else if (address == 4) {
-        return oamdata;
+        return readOAM(oamaddr);
     } else if (address == 7) {
         ppu_read_buffer = ppu_read_buffer_cpy;
 
@@ -308,8 +309,8 @@ void PPU::write(u16 address, u8 data) {
         ppustatus |= data;
     } else if (address == 3) {
         oamaddr = data;
-    } else if (address == 4) {
-        oamdata = data;
+    } else if (address == 4 && (scanLine > 239 && scanLine != 241)) {
+        copyOAM(data, oamaddr++);
     } else if (address == 5) {
         if (w == 0) {
             t &= 0x7FE0;
@@ -351,7 +352,7 @@ u8 PPU::ppuread(u16 address) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 2) {
+            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 3) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -403,8 +404,7 @@ void PPU::ppuwrite(u16 address, u8 data) {
             mapper->ppuwrite(address, data);
             break;
         case 0x2000 ... 0x2FFF:
-            //Horizontal
-            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 2) {
+            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 3) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -456,6 +456,21 @@ void PPU::copyOAM(u8 oamEntry, int index) {
         primaryOAM[oamSelect].attr = oamEntry;
     } else {
         primaryOAM[oamSelect].x = oamEntry;
+    }
+}
+
+u8 PPU::readOAM(int index) {
+    int oamSelect = index / 4;
+    int property = index % 4;
+
+    if (property == 0) {
+        return primaryOAM[oamSelect].y;
+    } else if (property == 1) {
+        return primaryOAM[oamSelect].tileNum;
+    } else if (property == 2) {
+        return primaryOAM[oamSelect].attr;
+    } else {
+        return primaryOAM[oamSelect].x;
     }
 }
 

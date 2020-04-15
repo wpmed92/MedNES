@@ -2,6 +2,7 @@
 #include <iostream>
 
 void MMC1::write(u16 address, u8 data) {
+
     //prg ram region
     if (address < 0x8000) {
         if (!(prgBank & 0x10)) {
@@ -47,6 +48,7 @@ void MMC1::write(u16 address, u8 data) {
 
 u8 MMC1::read(u16 address) {
     //prg ram region
+
     if (address < 0x8000) {
         if (!(prgBank & 0x10)) {
             return prgRam[address - 0x6000];
@@ -90,6 +92,7 @@ void MMC1::ppuwrite(u16 address, u8 data) {
 
 u8 MMC1::ppuread(u16 address) {
     //8kb mode
+
     if (controlReg.chrRomBankMode == 0) {
         //bit0 ignored
         return chrROM[(chrBank0 & 0x1E) * 0x2000 + address];
@@ -98,7 +101,7 @@ u8 MMC1::ppuread(u16 address) {
         if (address < 0x1000) {
             return chrROM[chrBank0 * 0x1000 + address];
         } else {
-            return chrROM[chrROM.size()/2 + chrBank1 * 0x1000 + address];
+            return chrROM[chrBank1 * 0x1000 + (address - 0x1000)];
         }
     }
 }

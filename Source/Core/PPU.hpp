@@ -134,6 +134,7 @@ public:
     
     void tick();
     void copyOAM(u8, int);
+    u8 readOAM(int);
     bool genNMI();
     bool generateFrame;
     void printState();
