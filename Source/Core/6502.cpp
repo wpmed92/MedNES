@@ -508,7 +508,7 @@ u8 CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
         //APU I/O registers
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
-    } else if (address >= 0x8000 && address <= 0xFFFF) {
+    } else if (address >= 0x6000 && address <= 0xFFFF) {
         if (mode == MemoryAccessMode::READ) {
             readData = mapper->read(address);
         } else {

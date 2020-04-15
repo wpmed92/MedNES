@@ -8,7 +8,7 @@ class UnROM : public Mapper {
     u32 lastBankStart = 0;
 
   public:
-    UnROM(std::vector<u8> &prgCode, std::vector<u8> &chrROM) : Mapper(prgCode, chrROM) { 
+    UnROM(std::vector<u8> &prgCode, std::vector<u8> &chrROM, int mirroring) : Mapper(prgCode, chrROM, mirroring) { 
       lastBankStart = prgCode.size() - 16384;
     }
     ~UnROM() override = default;

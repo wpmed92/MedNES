@@ -351,7 +351,7 @@ u8 PPU::ppuread(u16 address) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mirroring == 0) {
+            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 2) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -404,7 +404,7 @@ void PPU::ppuwrite(u16 address, u8 data) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mirroring == 0) {
+            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 2) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
