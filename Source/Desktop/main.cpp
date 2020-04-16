@@ -90,7 +90,6 @@ int main(int argc, char ** argv) {
     }
 
     PPU ppu = PPU(mapper);
-    ppu.setMirroring(rom.getMirroring());
     Controller controller;
     CPU6502 cpu = CPU6502(mapper, &ppu, &controller);
     cpu.reset();

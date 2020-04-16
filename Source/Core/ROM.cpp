@@ -5,6 +5,7 @@
 #include "Mapper/NROM.hpp"
 #include "Mapper/UnROM.hpp"
 #include "Mapper/CNROM.hpp"
+#include "Mapper/MMC1.hpp"
 
 void ROM::open(std::string filePath ) {
     std::ifstream in(filePath, std::ios::binary);
@@ -61,15 +62,19 @@ int ROM::getMirroring() {
 Mapper* ROM::getMapper() {
   switch (mapperNum) {
     case 0:
-        return new NROM(prgCode, chrData);
+        return new NROM(prgCode, chrData, mirroring);
         break;
 
+    case 1:
+        return new MMC1(prgCode, chrData, mirroring);
+        break;
+    
     case 2:
-        return new UnROM(prgCode, chrData);
+        return new UnROM(prgCode, chrData, mirroring);
         break;
 
     case 3:
-        return new CNROM(prgCode, chrData);
+        return new CNROM(prgCode, chrData, mirroring);
         break;
 
     default:

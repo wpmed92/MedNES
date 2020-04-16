@@ -196,27 +196,26 @@ inline void PPU::emitPixel() {
     bool showSprite = false;
     bool spriteFound = false;
 
-    for (int i = 0; i < spriteRenderEntities.size(); i++) {
-        if (spriteRenderEntities[i].isActive) {
-            SpriteRenderEntity &sprite = spriteRenderEntities[i];
-
+    for (auto& sprite : spriteRenderEntities) {
+        if (sprite.isActive) {
             if (spriteFound) {
                 sprite.shift();
                 continue;
             }
 
+            bool opaqueSprite = (sprite.hi & 1) || (sprite.lo & 1) || (sprite.lo & 128) || (sprite.hi & 128);
             spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
             spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
             spritePixel3 = sprite.attr & 1;
             spritePixel4 = sprite.attr & 2;
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
 
-            if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
+            if (!(ppustatus & 64) && opaqueSprite && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
                 ppustatus |= 64;
             }
 
             if (spriteBit12) {
-                showSprite = ((spriteBit12 && bgBit12 && !(sprite.attr & 32)) || (spriteBit12 && !bgBit12)) && (ppumask & 16);
+                showSprite = (bgBit12 && !(sprite.attr & 32)) || (!bgBit12 && (ppumask & 16));
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
                 spriteFound = true;
             }
@@ -231,8 +230,8 @@ inline void PPU::emitPixel() {
     }
     
     u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
-    u8 p = (ppumask & 1) ? ((pindex & 0x30)*3) : (pindex * 3);
-    buffer[pixelIndex++] = 255 << 24 | (palette[p] << 16) | (palette[p + 1] << 8) | (palette[p + 2]); //ARGB
+    u8 p = (ppumask & 1) ? (pindex & 0x30) : pindex;
+    buffer[pixelIndex++] = palette[p];
 }
 
 inline void PPU::copyHorizontalBits() {
@@ -261,22 +260,22 @@ bool PPU::genNMI() {
 
 }
 
-u8* PPU::read(u16 address) {
+u8 PPU::read(u16 address) {
     address %= 8;
 
     if (address == 0) {
-        return &ppuctrl;
+        return ppuctrl;
     } else if (address == 1) {
-        return &ppumask;
+        return ppumask;
     } else if (address == 2) {
         ppustatus_cpy = ppustatus;
         ppustatus &= ~0x80;
         w = 0;
-        return &ppustatus_cpy;
+        return ppustatus_cpy;
     } else if (address == 3) {
-        return &oamaddr;
+        return oamaddr;
     } else if (address == 4) {
-        return &oamdata;
+        return readOAM(oamaddr);
     } else if (address == 7) {
         ppu_read_buffer = ppu_read_buffer_cpy;
 
@@ -289,10 +288,10 @@ u8* PPU::read(u16 address) {
 
         v += ((ppuctrl & 4) ? 32 : 1);
         v%=16384;
-        return &ppu_read_buffer;
+        return ppu_read_buffer;
     }
 
-    return &oamaddr;
+    return 0;
 }
 
 void PPU::write(u16 address, u8 data) {
@@ -310,8 +309,8 @@ void PPU::write(u16 address, u8 data) {
         ppustatus |= data;
     } else if (address == 3) {
         oamaddr = data;
-    } else if (address == 4) {
-        oamdata = data;
+    } else if (address == 4 && (scanLine > 239 && scanLine != 241)) {
+        copyOAM(data, oamaddr++);
     } else if (address == 5) {
         if (w == 0) {
             t &= 0x7FE0;
@@ -353,7 +352,7 @@ u8 PPU::ppuread(u16 address) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mirroring == 0) {
+            if (mapper->getMirroring() == 0) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -366,10 +365,16 @@ u8 PPU::ppuread(u16 address) {
                     address -= 0x800;
                 }
             //Vertical
-            } else {
+            } else if (mapper->getMirroring() == 1) {
                 if (address >= 0x2800 && address < 0x3000) {
                     address -= 0x800;
                 }
+            //One-screen mirroring, lower-bank (MMC1)
+            } else if (mapper->getMirroring() == 2) {
+                address &= ~0xC00;
+            //One-screen mirroring, upper-bank (MMC1)  
+            } else {
+                address = (address & ~0xC00) + 0x400;
             }
 
             return vram[address - 0x2000];
@@ -406,7 +411,7 @@ void PPU::ppuwrite(u16 address, u8 data) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mirroring == 0) {
+            if (mapper->getMirroring() == 0) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -419,10 +424,16 @@ void PPU::ppuwrite(u16 address, u8 data) {
                     address -= 0x800;
                 }
             //Vertical
-            } else {
+            } else if (mapper->getMirroring() == 1) {
                 if (address >= 0x2800 && address < 0x3000) {
                     address -= 0x800;
                 }
+            //One-screen mirroring, lower-bank (MMC1)
+            } else if (mapper->getMirroring() == 2) {
+                address &= ~0xC00;
+            //One-screen mirroring, upper-bank (MMC1)  
+            } else {
+                address = (address & ~0xC00) + 0x400;
             }
 
             vram[address - 0x2000] = data;
@@ -461,20 +472,29 @@ void PPU::copyOAM(u8 oamEntry, int index) {
     }
 }
 
+u8 PPU::readOAM(int index) {
+    int oamSelect = index / 4;
+    int property = index % 4;
+
+    if (property == 0) {
+        return primaryOAM[oamSelect].y;
+    } else if (property == 1) {
+        return primaryOAM[oamSelect].tileNum;
+    } else if (property == 2) {
+        return primaryOAM[oamSelect].attr;
+    } else {
+        return primaryOAM[oamSelect].x;
+    }
+}
+
 inline void PPU::decrementSpriteCounters() {
     if (isRenderingDisabled()) {
         return;
     }
 
-    for (int i = 0; i < spriteRenderEntities.size(); i++) {
-        if (spriteRenderEntities.size() == 0)
-            break;
-        if (spriteRenderEntities[i].counter != 0) {
-           spriteRenderEntities[i].counter--;
-
-            if (spriteRenderEntities[i].counter == 0) {
-                spriteRenderEntities[i].isActive = true;
-            }
+    for (auto& sprite : spriteRenderEntities) {
+        if (--sprite.counter == 0) {
+            sprite.isActive = true;
         }
     }
 }
@@ -640,8 +660,4 @@ bool PPU::inYRange(const Sprite& oam) {
 
 void PPU::printState() {
     std::cout << "scanline=" << unsigned(scanLine) << ", " << unsigned(dot) << std::endl << std::endl;
-}
-
-bool PPU::inVBlank() {
-    return (scanLine >= 241 && scanLine <= 260);
 }

@@ -64,7 +64,7 @@ inline void CPU6502::PRINT_LOG() {
 }
 
 u8 CPU6502::fetchInstruction() {
-    return *read(programCounter);
+    return read(programCounter);
 }
 
 inline void CPU6502::pushPC() {
@@ -77,14 +77,14 @@ inline void CPU6502::pushPC() {
 //Interupts
 void CPU6502::reset() {
     //init program counter = $FFFC, $FFFD
-    programCounter = *read(0xFFFD) * 256 + *read(0xFFFC);
+    programCounter = read(0xFFFD) * 256 + read(0xFFFC);
 }
 
 inline void CPU6502::irq() {
     pushPC();
     pushStack(statusRegister);
-    u8 lsb = *read(0xFFFE);
-    u8 msb = *read(0xFFFF);
+    u8 lsb = read(0xFFFE);
+    u8 msb = read(0xFFFF);
     programCounter = msb * 256 + lsb;
 }
 
@@ -92,8 +92,8 @@ inline void CPU6502::NMI() {
     SEI();
     pushPC();
     pushStack(statusRegister);
-    u8 lsb = *read(0xFFFA);
-    u8 msb = *read(0xFFFB);
+    u8 lsb = read(0xFFFA);
+    u8 msb = read(0xFFFB);
     programCounter = msb * 256 + lsb;
     tick();
 }
@@ -103,32 +103,32 @@ u16 CPU6502::immediate() {
 }
 
 u16 CPU6502::zeroPage() {
-    u8 zeroPage = *read(++programCounter);
+    u8 zeroPage = read(++programCounter);
     return zeroPage % 256;
 }
 
 u16 CPU6502::zeroPageX() {
     tick();
-    u8 zeroPage = *read(++programCounter);
+    u8 zeroPage = read(++programCounter);
     return (zeroPage + xRegister) % 256;
 }
 
 u16 CPU6502::zeroPageY() {
-    u8 zeroPage = *read(++programCounter);
+    u8 zeroPage = read(++programCounter);
     return (zeroPage + yRegister) % 256;
 }
 
 u16 CPU6502::absolute() {
-    u8 lsb = *read(++programCounter);
-    u8 msb = *read(++programCounter);
+    u8 lsb = read(++programCounter);
+    u8 msb = read(++programCounter);
     u16 address = msb * 256 + lsb;
     
     return address;
 }
 
 u16 CPU6502::absoluteY(bool extraTick) {
-    u8 lsb = *read(++programCounter);
-    u8 msb = *read(++programCounter);
+    u8 lsb = read(++programCounter);
+    u8 msb = read(++programCounter);
     u16 address = msb * 256 + lsb;
     
     if (extraTick) {
@@ -139,8 +139,8 @@ u16 CPU6502::absoluteY(bool extraTick) {
 }
 
 u16 CPU6502::absoluteX(bool extraTick) {
-    u8 lsb = *read(++programCounter);
-    u8 msb = *read(++programCounter);
+    u8 lsb = read(++programCounter);
+    u8 msb = read(++programCounter);
     u16 address = msb * 256 + lsb;
     
     if (extraTick) {
@@ -152,18 +152,18 @@ u16 CPU6502::absoluteX(bool extraTick) {
 
 u16 CPU6502::indirectX() {
     tick();
-    u16 operand = (*read(++programCounter) + xRegister) % 256;
-    u8 lsb = *read(operand);
-    u8 msb = *read((operand+1)%256);
+    u16 operand = (read(++programCounter) + xRegister) % 256;
+    u8 lsb = read(operand);
+    u8 msb = read((operand+1)%256);
     u16 address = msb * 256 + lsb;
     
     return address;
 }
 
 u16 CPU6502::indirectY(bool extraTick) {
-    u16 operand = *read(++programCounter);
-    u8 lsb = *read(operand);
-    u8 msb = *read((operand+1)%256);
+    u16 operand = read(++programCounter);
+    u8 lsb = read(operand);
+    u8 msb = read((operand+1)%256);
     u16 address = (msb * 256 + lsb);
     
     if (extraTick) {
@@ -174,7 +174,7 @@ u16 CPU6502::indirectY(bool extraTick) {
 }
 
 u16 CPU6502::relative() {
-    int8_t offset = *read(++programCounter);
+    int8_t offset = read(++programCounter);
     
     return programCounter + offset;
 }
@@ -470,8 +470,8 @@ void CPU6502::executeInstruction(u8 instruction) {
     }
 }
 
-u8* CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
-    u8* readData = nullptr;
+u8 CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
+    u8 readData = 0;
     
     if (address >= 0 && address < 0x2000) {
         if (mode == MemoryAccessMode::READ) {
@@ -495,7 +495,7 @@ u8* CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
                 
                 for (int i = 0; i < 256; i++) {
                     tick();
-                    ppu->copyOAM(*read(data * 256 + i), i);
+                    ppu->copyOAM(read(data * 256 + i), i);
                 }
             }
         } else {
@@ -508,7 +508,7 @@ u8* CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
         //APU I/O registers
     } else if (address >= 0x4018 && address < 0x4020) {
         //CPU test mode
-    } else if (address >= 0x8000 && address <= 0xFFFF) {
+    } else if (address >= 0x6000 && address <= 0xFFFF) {
         if (mode == MemoryAccessMode::READ) {
             readData = mapper->read(address);
         } else {
@@ -521,7 +521,7 @@ u8* CPU6502::memoryAccess(MemoryAccessMode mode, u16 address, u8 data) {
     return readData;
 }
 
-u8* CPU6502::read(u16 address) {
+u8 CPU6502::read(u16 address) {
     return memoryAccess(MemoryAccessMode::READ, address, 0);
 }
 
@@ -576,11 +576,11 @@ void CPU6502::pushStack(u8 data) {
 
 u8 CPU6502::popStack() {
     stackPointer++;
-    return *read(stackPointer + 256);
+    return read(stackPointer + 256);
 }
 
 void CPU6502::ADC(std::function<u16()> addressing) {
-    ADC(*read(addressing()));
+    ADC(read(addressing()));
 }
 
 void CPU6502::ADC(u8 data) {
@@ -595,7 +595,7 @@ void CPU6502::ADC(u8 data) {
 }
 
 void CPU6502::AND(std::function<u16()> addressing) {
-    AND(*read(addressing()));
+    AND(read(addressing()));
 }
 
 void CPU6502::AND(u8 data) {
@@ -605,26 +605,24 @@ void CPU6502::AND(u8 data) {
 }
 
 void CPU6502::ASL(std::function<u16()> addressing) {
-    u8* data = nullptr;
-    
     if (addressing == nullptr) {
-        data = &accumulator;
+        accumulator = ASL_val(accumulator);
         tick();
     } else {
-        data = read(addressing());
-        tick();
+        u16 address = addressing();
+        u8 data = ASL_val(read(address));
+        write(address, data);
         tick();
     }
-    
-    ASL_val(data);
 }
 
-void CPU6502::ASL_val(u8* data) {
-    u8 bit7 = (*data >> 7) & 1;
-    *data <<= 1;
+u8 CPU6502::ASL_val(u8 data) {
+    u8 bit7 = data & 0x80;
+    data <<= 1;
     setCarry(bit7);
-    setNegative(*data & 0x80);
-    setZero(*data == 0);
+    setNegative(data & 0x80);
+    setZero(data == 0);
+    return data;
 }
 
 void CPU6502::commonBranchLogic(bool expr, std::function<u16()> resolvePC) {
@@ -680,7 +678,7 @@ void CPU6502::BVS(std::function<u16()> resolvePC) {
 }
 
 void CPU6502::BIT(std::function<u16()> addressing) {
-    u8 data = *read(addressing());
+    u8 data = read(addressing());
     u8 result = accumulator & data;
     u8 data_bit6 = (data >> 6) & 1;
     u8 data_bit7 = (data >> 7) & 1;
@@ -697,8 +695,8 @@ void CPU6502::BRK() {
     statusRegCpy |= (1 << 4);
     //statusRegCpy |= (1 << 5);
     pushStack(statusRegCpy);
-    u8 lsb = *read(0xFFFE);
-    u8 msb = *read(0xFFFF);
+    u8 lsb = read(0xFFFE);
+    u8 msb = read(0xFFFF);
     programCounter = msb * 256 + lsb - 1;
     tick();
 }
@@ -724,7 +722,7 @@ void CPU6502::CLV() {
 }
 
 void CPU6502::CMP(std::function<u16()> addressing) {
-    CMP(*read(addressing()));
+    CMP(read(addressing()));
 }
 
 void CPU6502::CMP(u8 data) {
@@ -735,7 +733,7 @@ void CPU6502::CMP(u8 data) {
 }
 
 void CPU6502::CPX(std::function<u16()> addressing) {
-    u8 data = *read(addressing());
+    u8 data = read(addressing());
     u8 cmp = xRegister - data;
     setCarry(xRegister >= data);
     setZero(xRegister == data);
@@ -743,7 +741,7 @@ void CPU6502::CPX(std::function<u16()> addressing) {
 }
 
 void CPU6502::CPY(std::function<u16()> addressing) {
-    u8 data = *read(addressing());
+    u8 data = read(addressing());
     u8 cmp = yRegister - data;
     setCarry(yRegister >= data);
     setZero(yRegister == data);
@@ -751,15 +749,17 @@ void CPU6502::CPY(std::function<u16()> addressing) {
 }
 
 void CPU6502::DEC(std::function<u16()> addressing) {
-    DEC(read(addressing()));
+    u16 address = addressing();
+    u8 data = DEC(read(address));
+    write(address, data);
 }
 
-void CPU6502::DEC(u8* data) {
-    (*data)--;
-    setZero(*data == 0);
-    setNegative(*data & 0x80);
+u8 CPU6502::DEC(u8 data) {
+    data--;
+    setZero(data == 0);
+    setNegative(data & 0x80);
     tick();
-    tick();
+    return data;
 }
 
 void CPU6502::DEX() {
@@ -777,7 +777,7 @@ void CPU6502::DEY() {
 }
 
 void CPU6502::EOR(std::function<u16()> addressing) {
-    EOR(*read(addressing()));
+    EOR(read(addressing()));
 }
 
 void CPU6502::EOR(u8 data) {
@@ -787,15 +787,16 @@ void CPU6502::EOR(u8 data) {
 }
 
 void CPU6502::INC(std::function<u16()> addressing) {
-    INC(read(addressing()));
+    u16 address = addressing();
+    write(address, INC(read(address)));
 }
 
-void CPU6502::INC(u8* data) {
-    *data = *data + 1;
-    setZero(*data == 0);
-    setNegative(*data & 0x80);
+u8 CPU6502::INC(u8 data) {
+    data = data + 1;
+    setZero(data == 0);
+    setNegative(data & 0x80);
     tick();
-    tick();
+    return data;
 }
 
 void CPU6502::INX() {
@@ -815,12 +816,12 @@ void CPU6502::INY() {
 void CPU6502::JMP(std::function<u16()> addressing) {
     //indirect
     if (addressing == nullptr) {
-        u8 lsb = *read(programCounter + 1);
-        u8 msb = *read(programCounter + 2);
+        u8 lsb = read(programCounter + 1);
+        u8 msb = read(programCounter + 2);
         u16 address = msb * 256 + lsb;
-        u8 lsbt = *read(address);
+        u8 lsbt = read(address);
         u16 msbAddress = (address & 0xFF) == 0xFF ? address & 0xFF00 : address + 1;
-        u8 msbt = *read(msbAddress);
+        u8 msbt = read(msbAddress);
         programCounter = msbt * 256 + lsbt - 1;
     } else {
         programCounter = addressing() - 1;
@@ -838,7 +839,7 @@ void CPU6502::JSR(std::function<u16()> addressing) {
 }
 
 void CPU6502::LDA(std::function<u16()> addressing) {
-    LDA(*read(addressing()));
+    LDA(read(addressing()));
 }
 
 void CPU6502::LDA(u8 data) {
@@ -854,38 +855,35 @@ void CPU6502::LDX(u8 data) {
 }
 
 void CPU6502::LDX(std::function<u16()> addressing) {
-    LDX(*read(addressing()));
+    LDX(read(addressing()));
 }
 
 void CPU6502::LDY(std::function<u16()> addressing) {
-    yRegister = *read(addressing());
+    yRegister = read(addressing());
     setZero(yRegister == 0);
     setNegative(yRegister & 0x80);
 }
 
 void CPU6502::LSR(std::function<u16()> addressing) {
-    u8* data = nullptr;
-    
     if (addressing == nullptr) {
-        data = &accumulator;
+        accumulator = LSR_val(accumulator);
         tick();
     } else {
-        data = read(addressing());
-        tick();
+        u16 address = addressing();
+        u8 data = read(address);
+        write(address, LSR_val(data));
         tick();
     }
-    
-    LSR_val(data);
 }
 
-void CPU6502::LSR_val(u8* data) {
-    u8 bit0 = *data & 1;
-    *data >>= 1;
+u8 CPU6502::LSR_val(u8 data) {
+    u8 bit0 = data & 1;
+    data >>= 1;
     setCarry(bit0);
-    setNegative(*data & 0x80);
-    setZero(*data == 0);
+    setNegative(data & 0x80);
+    setZero(data == 0);
+    return data;
 }
-
 
 void CPU6502::NOP(std::function<u16()> addressing) {
     //Unofficial ones have addressing modes.
@@ -897,7 +895,7 @@ void CPU6502::NOP(std::function<u16()> addressing) {
 }
 
 void CPU6502::ORA(std::function<u16()> addressing) {
-    ORA(*read(addressing()));
+    ORA(read(addressing()));
 }
 
 void CPU6502::ORA(u8 data) {
@@ -934,53 +932,45 @@ void CPU6502::PLP() {
 }
 
 void CPU6502::ROL(std::function<u16()> addressing) {
-    u8* data = nullptr;
-    
     if (addressing == nullptr) {
-        data = &accumulator;
+        accumulator = ROL_val(accumulator);
         tick();
     } else {
-        data = read(addressing());
-        tick();
+        u16 address = addressing();
+        u8 data = ROL_val(read(address));
+        write(address, data);
         tick();
     }
-    
-    ROL_val(data);
 }
 
-void CPU6502::ROL_val(u8* data) {
-    u8 carry = statusRegister & 1;
-    u8 bit7 = (*data >> 7) & 1;
-    *data <<= 1;
-    *data |= carry;
+u8 CPU6502::ROL_val(u8 data) {
+    u8 bit7 = data & 0x80;
+    data = (data << 1) | (statusRegister & 1);
     setCarry(bit7);
-    setZero(*data == 0);
-    setNegative(*data & 0x80);
+    setZero(data == 0);
+    setNegative(data & 0x80);
+    return data;
 }
 
 void CPU6502::ROR(std::function<u16()> addressing) {
-    u8* data = nullptr;
-    
     if (addressing == nullptr) {
-        data = &accumulator;
+        accumulator = ROR_val(accumulator);
         tick();
     } else {
-        data = read(addressing());
-        tick();
+        u16 address = addressing();
+        u8 data = ROR_val(read(address));
+        write(address, data);
         tick();
     }
-    
-    ROR_val(data);
 }
 
-void CPU6502::ROR_val(u8* data) {
-    u8 carry = statusRegister & 1;
-    u8 bit0 = *data & 1;
-    *data >>= 1;
-    *data |= carry << 7;
+u8 CPU6502::ROR_val(u8 data) {
+    u8 bit0 = data & 1;
+    data = (data >> 1) | ((statusRegister & 1) << 7);
     setCarry(bit0);
-    setZero(*data == 0);
-    setNegative(*data & 0x80);
+    setZero(data == 0);
+    setNegative(data & 0x80);
+    return data;
 }
 
 void CPU6502::RTI() {
@@ -1001,7 +991,7 @@ void CPU6502::RTS() {
 }
 
 void CPU6502::SBC(std::function<u16()> addressing) {
-    SBC(*read(addressing()));
+    SBC(read(addressing()));
 }
 
 void CPU6502::SBC(u8 data) {
@@ -1078,7 +1068,7 @@ void CPU6502::TYA() {
 //UNOFFICIAL OPCODES
 //LDA+LDX
 void CPU6502::LAX(std::function<u16()> addressing) {
-    u8 data = *read(addressing());
+    u8 data = read(addressing());
     LDA(data);
     LDX(data);
 }
@@ -1090,50 +1080,52 @@ void CPU6502::SAX(std::function<u16()> addressing) {
 
 //DEC+CMP
 void CPU6502::DCP(std::function<u16()> addressing) {
-    u8 *data = read(addressing());
-    DEC(data);
-    CMP(*data);
+    u16 address = addressing();
+    u8 data = DEC(read(address));
+    write(address, data);
+    CMP(data);
 }
 
 //INC+SBC
 void CPU6502::ISB(std::function<u16()> addressing) {
-    u8* data = read(addressing());
-    INC(data);
-    SBC(*data);
+    u16 address = addressing();
+    u8 data = INC(read(address));
+    write(address, data);
+    SBC(data);
 }
 
 //ASL+ORA
 void CPU6502::SLO(std::function<u16()> addressing) {
-    u8* data = read(addressing());
-    ASL_val(data);
-    ORA(*data);
-    tick();
+    u16 address = addressing();
+    u8 data = ASL_val(read(address));
+    write(address, data);
+    ORA(data);
     tick();
 }
 
 //ROL+AND
 void CPU6502::RLA(std::function<u16()> addressing) {
-    u8* data = read(addressing());
-    ROL_val(data);
-    AND(*data);
-    tick();
+    u16 address = addressing();
+    u8 data = ROL_val(read(address));
+    write(address, data);
+    AND(data);
     tick();
 }
 
 //LSR+EOR
 void CPU6502::SRE(std::function<u16()> addressing) {
-    u8* data = read(addressing());
-    LSR_val(data);
-    EOR(*data);
-    tick();
+    u16 address = addressing();
+    u8 data = LSR_val(read(address));
+    write(address, data);
+    EOR(data);
     tick();
 }
 
 //ROR+ADC
 void CPU6502::RRA(std::function<u16()> addressing) {
-    u8* data = read(addressing());
-    ROR_val(data);
-    ADC(*data);
-    tick();
+    u16 address = addressing();
+    u8 data = ROR_val(read(address));
+    write(address, data);
+    ADC(data);
     tick();
 }

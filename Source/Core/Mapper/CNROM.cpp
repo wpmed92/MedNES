@@ -1,12 +1,20 @@
 
  #include "CNROM.hpp"
 
- u8* CNROM::read(u16 address) {
+ u8 CNROM::read(u16 address) {
+    if (address < 0x8000) {
+        return 0;
+    }
+
     address = (address - 0x8000) % prgCode.size();
-    return &prgCode[address];
+    return prgCode[address];
 }
 
 void CNROM::write(u16 address, u8 data) {
+    if (address < 0x8000) {
+        return;
+    }
+
     bankSelect = data & 3;
 }
 

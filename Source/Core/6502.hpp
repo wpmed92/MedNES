@@ -122,7 +122,7 @@ private:
     //Arithmetic shift left
     void ASL(std::function<u16()>);
     
-    void ASL_val(u8*); //for SLO
+    u8 ASL_val(u8); //for SLO
     
     //Branch on carry clear
     void BCC(std::function<u16()>);
@@ -180,7 +180,7 @@ private:
     //Decrement
     void DEC(std::function<u16()>);
     
-    void DEC(u8*); //for DCP
+    u8 DEC(u8); //for DCP
     
     //decrement X
     void DEX();
@@ -196,7 +196,7 @@ private:
     //Increment
     void INC(std::function<u16()>);
     
-    void INC(u8*); //for ISB
+    u8 INC(u8); //for ISB
     
     //Increment X
     void INX();
@@ -226,7 +226,7 @@ private:
     //Logical shift right
     void LSR(std::function<u16()>);
     
-    void LSR_val(u8*); //for SRE
+    u8 LSR_val(u8); //for SRE
     
     //Or with accumulator
     void ORA(std::function<u16()>);
@@ -248,12 +248,12 @@ private:
     //Rotate left
     void ROL(std::function<u16()>);
     
-    void ROL_val(u8*);
+    u8 ROL_val(u8);
     
     //Rotate right
     void ROR(std::function<u16()>);
     
-    void ROR_val(u8*); //for RRA
+    u8 ROR_val(u8); //for RRA
     
     //Return from interrupt
     void RTI();
@@ -331,8 +331,8 @@ public:
     CPU6502(Mapper* mapper, PPU* ppu, Controller* controller) : mapper(mapper), ppu(ppu), controller(controller) { };
     u8 fetchInstruction();
     void executeInstruction(u8);
-    u8* memoryAccess(MemoryAccessMode, u16, u8);
-    u8* read(u16);
+    u8 memoryAccess(MemoryAccessMode, u16, u8);
+    u8 read(u16);
     void write(u16, u8);
     void run();
     void step();
