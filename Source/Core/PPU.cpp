@@ -352,7 +352,7 @@ u8 PPU::ppuread(u16 address) {
             break;
         case 0x2000 ... 0x2FFF:
             //Horizontal
-            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 3) {
+            if (mapper->getMirroring() == 0) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -365,10 +365,16 @@ u8 PPU::ppuread(u16 address) {
                     address -= 0x800;
                 }
             //Vertical
-            } else {
+            } else if (mapper->getMirroring() == 1) {
                 if (address >= 0x2800 && address < 0x3000) {
                     address -= 0x800;
                 }
+            //One-screen mirroring, lower-bank (MMC1)
+            } else if (mapper->getMirroring() == 2) {
+                address &= ~0xC00;
+            //One-screen mirroring, upper-bank (MMC1)  
+            } else {
+                address = (address & ~0xC00) + 0x400;
             }
 
             return vram[address - 0x2000];
@@ -404,7 +410,8 @@ void PPU::ppuwrite(u16 address, u8 data) {
             mapper->ppuwrite(address, data);
             break;
         case 0x2000 ... 0x2FFF:
-            if (mapper->getMirroring() == 0 || mapper->getMirroring() == 3) {
+            //Horizontal
+            if (mapper->getMirroring() == 0) {
                 if (address >= 0x2400 && address < 0x2800) {
                     address -= 0x400;
                 }
@@ -417,10 +424,16 @@ void PPU::ppuwrite(u16 address, u8 data) {
                     address -= 0x800;
                 }
             //Vertical
-            } else {
+            } else if (mapper->getMirroring() == 1) {
                 if (address >= 0x2800 && address < 0x3000) {
                     address -= 0x800;
                 }
+            //One-screen mirroring, lower-bank (MMC1)
+            } else if (mapper->getMirroring() == 2) {
+                address &= ~0xC00;
+            //One-screen mirroring, upper-bank (MMC1)  
+            } else {
+                address = (address & ~0xC00) + 0x400;
             }
 
             vram[address - 0x2000] = data;

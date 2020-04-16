@@ -2,7 +2,6 @@
 #include <iostream>
 
 void MMC1::write(u16 address, u8 data) {
-
     //prg ram region
     if (address < 0x8000) {
         if (!(prgBank & 0x10)) {
@@ -24,7 +23,18 @@ void MMC1::write(u16 address, u8 data) {
         switch (address) {
             case 0x8000 ... 0x9FFF:
                 controlReg.val = mmc1SR;
-                mirroring = controlReg.mirroring;
+
+                //Make mirroring compatible with ines mirroring
+                if (controlReg.mirroring == 0) {
+                    mirroring = 2;
+                } else if (controlReg.mirroring == 1) {
+                    mirroring = 3;
+                } else if (controlReg.mirroring == 2) {
+                    mirroring = 1;
+                } else {
+                    mirroring = 0;
+                }
+
                 break;
 
             case 0xA000 ... 0xBFFF:
@@ -92,7 +102,6 @@ void MMC1::ppuwrite(u16 address, u8 data) {
 
 u8 MMC1::ppuread(u16 address) {
     //8kb mode
-
     if (controlReg.chrRomBankMode == 0) {
         //bit0 ignored
         return chrROM[(chrBank0 & 0x1E) * 0x2000 + address];
