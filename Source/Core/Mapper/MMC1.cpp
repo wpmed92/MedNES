@@ -1,5 +1,4 @@
 #include "MMC1.hpp"
-#include <iostream>
 
 void MMC1::write(u16 address, u8 data) {
     //prg ram region

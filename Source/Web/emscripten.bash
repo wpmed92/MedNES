@@ -14,6 +14,7 @@ emcc -O3 -std=c++14 -I../Core -c -o ./build/CNROM.o ../Core/Mapper/CNROM.cpp
 emcc -O3 -std=c++14 -I../Core -c -o ./build/Mapper.o ../Core/Mapper/Mapper.cpp
 emcc -O3 -std=c++14 -I../Core -c -o ./build/NROM.o ../Core/Mapper/NROM.cpp
 emcc -O3 -std=c++14 -I../Core -c -o ./build/UnROM.o ../Core/Mapper/UnROM.cpp
+emcc -O3 -std=c++14 -I../Core -c -o ./build/MMC1.o ../Core/Mapper/MMC1.cpp
 
 emcc -O3 -std=c++14 -I../Core -c -o ./build/Emscripten.o ./Emscripten.cpp
 

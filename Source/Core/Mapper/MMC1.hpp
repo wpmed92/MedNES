@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Mapper.hpp"
-#include "../Common/Typedefs.hpp"
 
 class MMC1 : public Mapper {
     private:
