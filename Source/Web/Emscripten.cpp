@@ -68,7 +68,6 @@ extern "C" bool EMSCRIPTEN_KEEPALIVE init(const char* charRom) {
     }
 
     objPpu = new PPU(objMapper);
-    objPpu->setMirroring(objRom->getMirroring());
 
     objController = new Controller();
 
