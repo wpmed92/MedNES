@@ -26,7 +26,7 @@ struct SpriteRenderEntity {
     int shifted = 0;
     
     void shift() {
-        if (shifted == 7) {
+        if (shifted == 8) {
             isActive = false;
             shifted = 0;
             return;
@@ -79,6 +79,7 @@ private:
     u16 bgShiftRegHi;
     u16 attrShiftReg1;
     u16 attrShiftReg2;
+    u8 quadrant_num;
     
     //Sprites
     u8 sprite_palette[16] = { 0 };
