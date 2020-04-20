@@ -44,7 +44,7 @@ void PPU::tick() {
             //eval sprites
             //emit pixels
             if (scanLine >= 0 && scanLine <= 239) {
-                if (dot >= 1 && dot <= 256) {
+                if (dot >= 2 && dot <= 257) {
                     if (scanLine > 0) {
                         decrementSpriteCounters();
                     }
@@ -584,8 +584,10 @@ void PPU::evalSprites() {
 
         switch (cycle) {
             case 0 ... 1:
-                if (!isUninit(sprite))
+                if (!isUninit(sprite)) {
                     out = SpriteRenderEntity();
+                }
+
                 break;
 
             case 2:
@@ -598,8 +600,9 @@ void PPU::evalSprites() {
                 break;
 
             case 3:
-                if (!isUninit(sprite))
-                    out.counter = sprite.x + 1;
+                if (!isUninit(sprite)) {
+                    out.counter = sprite.x;
+                }
                 break;
 
             case 4:
@@ -620,8 +623,9 @@ void PPU::evalSprites() {
                 break;
 
             case 7:
-                if (!isUninit(sprite))
+                if (!isUninit(sprite)) {
                     spriteRenderEntities.push_back(out);
+                }
 
                 secondaryOAMCursor++;
                 break;
@@ -635,21 +639,17 @@ void PPU::evalSprites() {
 u16 PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
     u16 addr = 0;
 
+    int fineOffset = scanLine - sprite.y;
+
+    if (flipVertically) {
+        fineOffset = spriteHeight-1 - fineOffset;
+    }
+
     if (spriteHeight == 8) {
-        int fineOffset = scanLine - sprite.y;
-
-        if (flipVertically)
-            fineOffset = spriteHeight-1 - fineOffset;
-
         addr = (((u16) ppuctrl & 8) << 9) |
         ((u16) sprite.tileNum << 4) |
         fineOffset;
     } else {
-
-        int fineOffset = scanLine - sprite.y;
-
-        if (flipVertically)
-            fineOffset = spriteHeight-1 - fineOffset;
         addr = (((u16) sprite.tileNum & 1) << 12) |
         ((u16) ((sprite.tileNum & ~1) << 4)) |
         fineOffset;

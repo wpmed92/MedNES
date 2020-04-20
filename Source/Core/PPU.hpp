@@ -110,7 +110,6 @@ private:
     inline void copyVerticalBits();
     inline bool isRenderingDisabled();
     inline void emitPixel();
-    inline void loadRegisters();
     inline void fetchTiles();
     inline void xIncrement();
     inline void yIncrement();
@@ -131,7 +130,6 @@ public:
     //ppu address space
     u8 ppuread(u16 address);
     void ppuwrite(u16 address, u8 data);
-    void setMirroring(int mirroring) { this->mirroring = mirroring; }
     
     void tick();
     void copyOAM(u8, int);

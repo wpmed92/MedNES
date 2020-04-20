@@ -29,8 +29,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
-|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Donkey-Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Bomberman.png) Bomberman |
-|![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Pac-Man.png) Pac-Man |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Price%20of%20Persia.png) Prince of Persia |![alt text](https://github.com/wpmed92/MedNES/blob/master/screenshots/Mega%20Man.png) Mega Man |
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Super%20Mario%20Bros.png) Super Mario Bros |  ![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Donkey-Kong.png) Donkey Kong |![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Bomberman%20II.png) Bomberman II |
+|![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Pac-Man.png) Pac-Man |![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Mega%20Man.png) Mega Man |![alt text](https://github.com/wpmed92/MedNES/blob/master/Screenshots/Zelda.png) The Legend of Zelda |
 
 ## Projects
 

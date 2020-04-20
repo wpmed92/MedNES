@@ -9,7 +9,7 @@ class MMC1 : public Mapper {
         u8 prgRam[0x2000] = { 0 };
 
         //internal
-        union controlReg {
+        union {
             struct {
                 unsigned mirroring: 2;
                 unsigned prgRomBankMode: 2;
