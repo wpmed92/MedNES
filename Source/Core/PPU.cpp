@@ -117,16 +117,19 @@ inline void PPU::reloadShiftersAndShift() {
         return;
     }
 
-    if (dot % 8 == 1) {
-        bgShiftRegLo |= patternlow;
-        bgShiftRegHi |= patternhigh;
-    }
-
     bgShiftRegLo <<= 1;
     bgShiftRegHi <<= 1;
     attrShiftReg1 <<= 1;
     attrShiftReg2 <<= 1;
 
+    if (dot % 8 == 1) {
+        u8 attr_bits1 = (attrbyte >> quadrant_num) & 1;
+        u8 attr_bits2 = (attrbyte >> quadrant_num) & 2;
+        attrShiftReg1 |= attr_bits1 ? 255 : 0;
+        attrShiftReg2 |= attr_bits2 ? 255 : 0;
+        bgShiftRegLo |= patternlow;
+        bgShiftRegHi |= patternhigh;
+    }
 }
 
 inline bool PPU::isRenderingDisabled() {
@@ -144,6 +147,7 @@ inline void PPU::fetchTiles() {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
     } else if (cycle == 3) {
         attrbyte = ppuread(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
+        quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
     } else if (cycle == 5) {
         u16 patterAddr =
         (((u16) ppuctrl & 0x10) << 8) +
@@ -157,16 +161,10 @@ inline void PPU::fetchTiles() {
          ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
     } else if (cycle == 0) {
-        u8 quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
-        u8 attr_bits1 = (attrbyte >> quadrant_num) & 1;
-        u8 attr_bits2 = (attrbyte >> (quadrant_num + 1)) & 1;
-        attrShiftReg1 |= attr_bits1 ? 255 : 0;
-        attrShiftReg2 |= attr_bits2 ? 255 : 0;
-
         if (dot == 256) {
             yIncrement();
         }
-
+        
         xIncrement();
     }
 }
@@ -210,7 +208,7 @@ inline void PPU::emitPixel() {
             spritePixel4 = sprite.attr & 2;
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
 
-            if (!(ppustatus & 64) && opaqueSprite && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8)) {
+            if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8) && dot < 256) {
                 ppustatus |= 64;
             }
 
@@ -493,8 +491,14 @@ inline void PPU::decrementSpriteCounters() {
     }
 
     for (auto& sprite : spriteRenderEntities) {
-        if (--sprite.counter == 0) {
+        if (sprite.counter == 0) {
             sprite.isActive = true;
+        } else {
+            --sprite.counter;
+
+            if (sprite.counter == 0) {
+                sprite.isActive = true;
+            }
         }
     }
 }
@@ -595,7 +599,7 @@ void PPU::evalSprites() {
 
             case 3:
                 if (!isUninit(sprite))
-                    out.counter = sprite.x;
+                    out.counter = sprite.x + 1;
                 break;
 
             case 4:
