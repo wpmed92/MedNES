@@ -143,28 +143,33 @@ inline void PPU::fetchTiles() {
 
     int cycle = dot % 8 ;
 
+    //Fetch nametable byte
     if (cycle == 1) {
         ntbyte = ppuread(0x2000 | (v & 0x0FFF));
+    //Fetch attribute byte, also calculate which quadrant of the attribute byte is active
     } else if (cycle == 3) {
         attrbyte = ppuread(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
         quadrant_num = (((v & 2) >> 1) | ((v & 64) >> 5)) * 2;
+    //Get low order bits of background tile
     } else if (cycle == 5) {
         u16 patterAddr =
         (((u16) ppuctrl & 0x10) << 8) +
         ((u16) ntbyte << 4) +
         ((v & 0x7000) >> 12);
         patternlow = ppuread(patterAddr);
+    //Get high order bits of background tile
     } else if (cycle == 7) {
         u16 patterAddr =
         (((u16) ppuctrl & 0x10) << 8) +
          ((u16) ntbyte << 4) +
          ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
+    //Change columns, change rows
     } else if (cycle == 0) {
         if (dot == 256) {
             yIncrement();
-        }
-        
+        } 
+
         xIncrement();
     }
 }
@@ -195,25 +200,25 @@ inline void PPU::emitPixel() {
     bool spriteFound = false;
 
     for (auto& sprite : spriteRenderEntities) {
-        if (sprite.isActive) {
+        if (sprite.counter == 0 && sprite.shifted != 8) {
             if (spriteFound) {
                 sprite.shift();
                 continue;
             }
 
-            bool opaqueSprite = (sprite.hi & 1) || (sprite.lo & 1) || (sprite.lo & 128) || (sprite.hi & 128);
             spritePixel1 = sprite.flipHorizontally ? ((sprite.lo & 1) << 7) : sprite.lo & 128;
             spritePixel2 = sprite.flipHorizontally ? ((sprite.hi & 1) << 7) : sprite.hi & 128;
             spritePixel3 = sprite.attr & 1;
             spritePixel4 = sprite.attr & 2;
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
 
+            //Sprite zero hit
             if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8) && dot < 256) {
                 ppustatus |= 64;
             }
 
             if (spriteBit12) {
-                showSprite = (bgBit12 && !(sprite.attr & 32)) || (!bgBit12 && (ppumask & 16));
+                showSprite = ((bgBit12 && !(sprite.attr & 32)) || !bgBit12) && (ppumask & 16);
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
                 spriteFound = true;
             }
@@ -228,6 +233,7 @@ inline void PPU::emitPixel() {
     }
     
     u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
+    //Handling grayscale mode
     u8 p = (ppumask & 1) ? (pindex & 0x30) : pindex;
     buffer[pixelIndex++] = palette[p];
 }
@@ -491,14 +497,8 @@ inline void PPU::decrementSpriteCounters() {
     }
 
     for (auto& sprite : spriteRenderEntities) {
-        if (sprite.counter == 0) {
-            sprite.isActive = true;
-        } else {
-            --sprite.counter;
-
-            if (sprite.counter == 0) {
-                sprite.isActive = true;
-            }
+        if (sprite.counter > 0) {
+            sprite.counter--;
         }
     }
 }

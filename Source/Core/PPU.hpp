@@ -22,13 +22,10 @@ struct SpriteRenderEntity {
     u8 id;
     bool flipHorizontally;
     bool flipVertically;
-    bool isActive;
     int shifted = 0;
     
     void shift() {
         if (shifted == 8) {
-            isActive = false;
-            shifted = 0;
             return;
         }
         
