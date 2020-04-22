@@ -226,7 +226,7 @@ inline void PPU::emitPixel() {
             sprite.shift();
         }
     }
-    
+
     //When bg rendering is off
     if ((ppumask & 8) == 0) {
         paletteIndex = 0;
@@ -235,6 +235,13 @@ inline void PPU::emitPixel() {
     u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
     //Handling grayscale mode
     u8 p = (ppumask & 1) ? (pindex & 0x30) : pindex;
+
+    //Dark border rect to hide seam of scroll, and other glitches that may occur
+    if (dot <= 9 || dot >= 249 || scanLine <= 7 || scanLine >= 232) {
+        showSprite = false;
+        p = 13;
+    }
+
     buffer[pixelIndex++] = palette[p];
 }
 
@@ -641,8 +648,13 @@ u16 PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
 
     int fineOffset = scanLine - sprite.y;
 
+    //By adding 8 to fineOffset we skip the high order bits
+    if (spriteHeight == 16 && fineOffset >= 8) {
+        fineOffset += 8;
+    }
+
     if (flipVertically) {
-        fineOffset = spriteHeight-1 - fineOffset;
+        fineOffset = spriteHeight - 1 - fineOffset;
     }
 
     if (spriteHeight == 8) {
