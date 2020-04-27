@@ -7,9 +7,9 @@ void PPU::tick() {
             //clear vbl flag and sprite overflow
             if (dot == 2) {
                 pixelIndex = 0;
-                ppustatus &= ~0x80;
-                ppustatus &= ~0x20;
-                ppustatus &= ~64;
+                ppustatus.val &= ~0x80;
+                ppustatus.val &= ~0x20;
+                ppustatus.val &= ~64;
             }
 
             //copy vertical bits
@@ -63,10 +63,10 @@ void PPU::tick() {
 
         if (scanLine == 241 && dot == 1) {
             //set vbl flag
-            ppustatus |= 0x80;
+            ppustatus.val |= 0x80;
 
             //flag for nmi
-            if (ppuctrl & 0x80) {
+            if (ppuctrl.val & 0x80) {
                 nmiOccured = true;
             }
         }
@@ -133,7 +133,7 @@ inline void PPU::reloadShiftersAndShift() {
 }
 
 inline bool PPU::isRenderingDisabled() {
-    return !((ppumask & 8) || (ppumask & 16));
+    return !ppumask.showBg && !ppumask.showSprites;
 }
 
 inline void PPU::fetchTiles() {
@@ -153,14 +153,14 @@ inline void PPU::fetchTiles() {
     //Get low order bits of background tile
     } else if (cycle == 5) {
         u16 patterAddr =
-        (((u16) ppuctrl & 0x10) << 8) +
+        ((u16) ppuctrl.bgPatternTableAddress << 12) +
         ((u16) ntbyte << 4) +
         ((v & 0x7000) >> 12);
         patternlow = ppuread(patterAddr);
     //Get high order bits of background tile
     } else if (cycle == 7) {
         u16 patterAddr =
-        (((u16) ppuctrl & 0x10) << 8) +
+        ((u16) ppuctrl.bgPatternTableAddress << 12) +
          ((u16) ntbyte << 4) +
          ((v & 0x7000) >> 12) + 8;
         patternhigh = ppuread(patterAddr);
@@ -213,12 +213,12 @@ inline void PPU::emitPixel() {
             spriteBit12 = (spritePixel2 >> 6) | (spritePixel1 >> 7);
 
             //Sprite zero hit
-            if (!(ppustatus & 64) && spriteBit12 && bgBit12 && sprite.id == 0 && (ppumask & 16) && (ppumask & 8) && dot < 256) {
-                ppustatus |= 64;
+            if (!ppustatus.spriteZeroHit && spriteBit12 && bgBit12 && sprite.id == 0 && ppumask.showSprites && ppumask.showBg && dot < 256) {
+                ppustatus.val |= 64;
             }
 
             if (spriteBit12) {
-                showSprite = ((bgBit12 && !(sprite.attr & 32)) || !bgBit12) && (ppumask & 16);
+                showSprite = ((bgBit12 && !(sprite.attr & 32)) || !bgBit12) && ppumask.showSprites;
                 spritePaletteIndex = 0x10 | (spritePixel4 << 2) | (spritePixel3 << 2) | spriteBit12;
                 spriteFound = true;
             }
@@ -228,13 +228,13 @@ inline void PPU::emitPixel() {
     }
 
     //When bg rendering is off
-    if ((ppumask & 8) == 0) {
+    if (!ppumask.showBg) {
         paletteIndex = 0;
     }
     
     u8 pindex = ppuread(0x3F00 | (showSprite ? spritePaletteIndex : paletteIndex)) % 64;
     //Handling grayscale mode
-    u8 p = (ppumask & 1) ? (pindex & 0x30) : pindex;
+    u8 p = ppumask.greyScale ? (pindex & 0x30) : pindex;
 
     //Dark border rect to hide seam of scroll, and other glitches that may occur
     if (dot <= 9 || dot >= 249 || scanLine <= 7 || scanLine >= 232) {
@@ -275,12 +275,12 @@ u8 PPU::read(u16 address) {
     address %= 8;
 
     if (address == 0) {
-        return ppuctrl;
+        return ppuctrl.val;
     } else if (address == 1) {
-        return ppumask;
+        return ppumask.val;
     } else if (address == 2) {
-        ppustatus_cpy = ppustatus;
-        ppustatus &= ~0x80;
+        ppustatus_cpy = ppustatus.val;
+        ppustatus.val &= ~0x80;
         w = 0;
         return ppustatus_cpy;
     } else if (address == 3) {
@@ -292,12 +292,12 @@ u8 PPU::read(u16 address) {
 
         if (v >= 0x3F00 && v <= 0x3FFF) {
             ppu_read_buffer_cpy = ppuread(v - 0x1000);
-            ppu_read_buffer = (ppumask & 1) ? (ppuread(v) & 0x30) : ppuread(v);
+            ppu_read_buffer = ppumask.greyScale ? (ppuread(v) & 0x30) : ppuread(v);
         } else {
             ppu_read_buffer_cpy = ppuread(v);
         }
 
-        v += ((ppuctrl & 4) ? 32 : 1);
+        v += ppuctrl.vramAddressIncrement ? 32 : 1;
         v%=16384;
         return ppu_read_buffer;
     }
@@ -311,13 +311,13 @@ void PPU::write(u16 address, u8 data) {
     if (address == 0) {
         t = (t & 0xF3FF) | (((u16) data & 0x03) << 10);
         spriteHeight = (data & 0x20) ? 16 : 8;
-        ppuctrl = data;
+        ppuctrl.val = data;
     } else if (address == 1) {
-        ppumask = data;
+        ppumask.val = data;
     } else if (address == 2) {
         data &= ~128;
-        ppustatus &= 128;
-        ppustatus |= data;
+        ppustatus.val &= 128;
+        ppustatus.val |= data;
     } else if (address == 3) {
         oamaddr = data;
     } else if (address == 4 && (scanLine > 239 && scanLine != 241)) {
@@ -351,7 +351,7 @@ void PPU::write(u16 address, u8 data) {
 
     } else if (address == 7) {
         ppuwrite(v, data);
-        v += ((ppuctrl & 4) ? 32 : 1);
+        v += ppuctrl.vramAddressIncrement ? 32 : 1;
         v %= 16384;
     }
 }
@@ -648,17 +648,17 @@ u16 PPU::getSpritePatternAddress(const Sprite &sprite, bool flipVertically) {
 
     int fineOffset = scanLine - sprite.y;
 
+    if (flipVertically) {
+        fineOffset = spriteHeight - 1 - fineOffset;
+    }
+
     //By adding 8 to fineOffset we skip the high order bits
     if (spriteHeight == 16 && fineOffset >= 8) {
         fineOffset += 8;
     }
 
-    if (flipVertically) {
-        fineOffset = spriteHeight - 1 - fineOffset;
-    }
-
     if (spriteHeight == 8) {
-        addr = (((u16) ppuctrl & 8) << 9) |
+        addr = ((u16) ppuctrl.spritePatternTableAddress << 12) |
         ((u16) sprite.tileNum << 4) |
         fineOffset;
     } else {

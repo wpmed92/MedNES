@@ -44,9 +44,51 @@ struct SpriteRenderEntity {
 class PPU : public INESBus {
 private:
     //Registers
-    u8 ppuctrl = 0; //$2000
-    u8 ppumask = 0; //$2001
-    u8 ppustatus = 0x80; //$2002
+
+    //$2000 PPUCTRL
+    union {
+        struct {
+            unsigned baseNametableAddress: 2;
+            unsigned vramAddressIncrement: 1;
+            unsigned spritePatternTableAddress: 1;
+            unsigned bgPatternTableAddress: 1;
+            unsigned spriteSize: 1;
+            unsigned ppuMasterSlaveSelect: 1;
+            unsigned generateNMI: 1;
+        };
+
+        u8 val;
+    } ppuctrl;
+
+    //$2001 PPUMASK
+    union {
+        struct {
+            unsigned greyScale: 1;
+            unsigned showBgLeftmost8: 1;
+            unsigned showSpritesLeftmost8: 1;
+            unsigned showBg: 1;
+            unsigned showSprites: 1;
+            unsigned emphasizeRed: 1;
+            unsigned emphasizeGreen: 1;
+            unsigned emphasizeBlue: 1;
+        };
+
+        u8 val;
+    } ppumask;
+
+
+    //$2002 PPUSTATUS
+    union {
+        struct {
+            unsigned leastSignificantBits: 5;
+            unsigned spriteOverflow: 1;
+            unsigned spriteZeroHit: 1;
+            unsigned vBlank: 1;
+        };
+
+        u8 val;
+    } ppustatus;
+
     u8 ppustatus_cpy = 0;
     u8 oamaddr = 0; //$2003
     u8 oamdata = 0; //$2004
@@ -68,7 +110,7 @@ private:
     //BG
     u8 bg_palette[16] = { 0 };
     u8 vram[2048] = { 0 };
-    u16 v = 0, t = 0, v1 = 0;
+    u16 v = 0, t = 0;
     u8 x = 0;
     int w = 0;
     u8 ntbyte, attrbyte, patternlow, patternhigh;
@@ -89,7 +131,6 @@ private:
     bool inRange = false;
     int inRangeCycles = 8;
     int spriteHeight = 8;
-    int spriteDelayCounter = 4;
     std::vector<SpriteRenderEntity> spriteRenderEntities;
     SpriteRenderEntity out;
 
@@ -100,7 +141,6 @@ private:
     int pixelIndex = 0;
     bool odd = false;
     bool nmiOccured = false;
-    int mirroring;
     
     //methods
     inline void copyHorizontalBits();
