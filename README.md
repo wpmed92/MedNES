@@ -37,6 +37,7 @@ These instructions will get you a copy of the project up and running on your loc
 Here are some projects that build on top of MedNES:
 
 * **[nes-memoryview](https://github.com/sniklaus/nes-memoryview)**: This project is really interesting. It shows how each byte in the 2kB RAM changes over time. You can associate sprite movements with OAM bytes just by looking at the plots! Also, this is the project that enabled the web port!
+* **[doogmorning NES emulator](https://gitee.com/doogmorning/programming-windows-/tree/master/FC%E6%A8%A1%E6%8B%9F%E5%99%A8)**: I came across this NES emulator, which added MedNES to its reference list. Go check it out!
 
 
 ## License
