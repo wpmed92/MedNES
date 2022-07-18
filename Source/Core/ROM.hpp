@@ -1,19 +1,19 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+
+#include <bitset>
 #include <string>
 #include <vector>
-#include <bitset>
+
 #include "INESBus.hpp"
 
-namespace MedNES
-{
+namespace MedNES {
 
-  class Mapper;
+class Mapper;
 
-  struct INESHeader
-  {
+struct INESHeader {
     //Header 16 byte
     char nes[4];
     u8 prgIn16kb;
@@ -24,12 +24,10 @@ namespace MedNES
     u8 flags9;
     u8 flags10;
     char zeros[5];
-  };
+};
 
-  class ROM
-  {
-
-  public:
+class ROM {
+   public:
     std::vector<u8> getChrData() { return chrData; };
     std::vector<u8> getPrgCode() { return prgCode; };
     void open(std::string);
@@ -37,13 +35,13 @@ namespace MedNES
     int getMirroring();
     Mapper *getMapper();
 
-  private:
+   private:
     INESHeader header;
     std::vector<u8> trainer;
     std::vector<u8> prgCode;
     std::vector<u8> chrData;
     int mirroring;
     u8 mapperNum;
-  };
+};
 
-}; //namespace MedNES
+};  //namespace MedNES

@@ -1,25 +1,23 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+
 #include "Common/Typedefs.hpp"
 #include "INESBus.hpp"
 #include "Mapper/Mapper.hpp"
 
-namespace MedNES
-{
+namespace MedNES {
 
-  struct Sprite
-  {
+struct Sprite {
     u8 y;
     u8 tileNum;
     u8 attr;
     u8 x;
     u8 id;
-  };
+};
 
-  struct SpriteRenderEntity
-  {
+struct SpriteRenderEntity {
     u8 lo;
     u8 hi;
     u8 attr;
@@ -29,32 +27,25 @@ namespace MedNES
     bool flipVertically;
     int shifted = 0;
 
-    void shift()
-    {
-      if (shifted == 8)
-      {
-        return;
-      }
+    void shift() {
+        if (shifted == 8) {
+            return;
+        }
 
-      if (flipHorizontally)
-      {
-        lo >>= 1;
-        hi >>= 1;
-      }
-      else
-      {
-        lo <<= 1;
-        hi <<= 1;
-      }
+        if (flipHorizontally) {
+            lo >>= 1;
+            hi >>= 1;
+        } else {
+            lo <<= 1;
+            hi <<= 1;
+        }
 
-      shifted++;
+        shifted++;
     }
-  };
+};
 
-  class PPU : public INESBus
-  {
-
-  public:
+class PPU : public INESBus {
+   public:
     PPU(Mapper *mapper) : mapper(mapper){};
 
     //cpu address space
@@ -73,62 +64,59 @@ namespace MedNES
     void printState();
     uint32_t buffer[256 * 240] = {0};
 
-  private:
+   private:
     //Registers
 
     //$2000 PPUCTRL
-    union
-    {
-      struct
-      {
-        unsigned baseNametableAddress : 2;
-        unsigned vramAddressIncrement : 1;
-        unsigned spritePatternTableAddress : 1;
-        unsigned bgPatternTableAddress : 1;
-        unsigned spriteSize : 1;
-        unsigned ppuMasterSlaveSelect : 1;
-        unsigned generateNMI : 1;
-      };
+    union {
+        struct
+        {
+            unsigned baseNametableAddress : 2;
+            unsigned vramAddressIncrement : 1;
+            unsigned spritePatternTableAddress : 1;
+            unsigned bgPatternTableAddress : 1;
+            unsigned spriteSize : 1;
+            unsigned ppuMasterSlaveSelect : 1;
+            unsigned generateNMI : 1;
+        };
 
-      u8 val;
+        u8 val;
     } ppuctrl;
 
     //$2001 PPUMASK
-    union
-    {
-      struct
-      {
-        unsigned greyScale : 1;
-        unsigned showBgLeftmost8 : 1;
-        unsigned showSpritesLeftmost8 : 1;
-        unsigned showBg : 1;
-        unsigned showSprites : 1;
-        unsigned emphasizeRed : 1;
-        unsigned emphasizeGreen : 1;
-        unsigned emphasizeBlue : 1;
-      };
+    union {
+        struct
+        {
+            unsigned greyScale : 1;
+            unsigned showBgLeftmost8 : 1;
+            unsigned showSpritesLeftmost8 : 1;
+            unsigned showBg : 1;
+            unsigned showSprites : 1;
+            unsigned emphasizeRed : 1;
+            unsigned emphasizeGreen : 1;
+            unsigned emphasizeBlue : 1;
+        };
 
-      u8 val;
+        u8 val;
     } ppumask;
 
     //$2002 PPUSTATUS
-    union
-    {
-      struct
-      {
-        unsigned leastSignificantBits : 5;
-        unsigned spriteOverflow : 1;
-        unsigned spriteZeroHit : 1;
-        unsigned vBlank : 1;
-      };
+    union {
+        struct
+        {
+            unsigned leastSignificantBits : 5;
+            unsigned spriteOverflow : 1;
+            unsigned spriteZeroHit : 1;
+            unsigned vBlank : 1;
+        };
 
-      u8 val;
+        u8 val;
     } ppustatus;
 
     u8 ppustatus_cpy = 0;
-    u8 oamaddr = 0;   //$2003
-    u8 oamdata = 0;   //$2004
-    u8 ppuscroll = 0; //$2005
+    u8 oamaddr = 0;    //$2003
+    u8 oamdata = 0;    //$2004
+    u8 ppuscroll = 0;  //$2005
     u8 ppu_read_buffer = 0;
     u8 ppu_read_buffer_cpy = 0;
 
@@ -191,6 +179,6 @@ namespace MedNES
     void evalSprites();
     bool inYRange(const Sprite &);
     bool isUninit(const Sprite &);
-  };
+};
 
-}; //namespace MedNES
+};  //namespace MedNES

@@ -1,21 +1,21 @@
 #pragma once
 
 #include <stdio.h>
-#include <vector>
-#include <sstream>
-#include <iostream>
+
 #include <functional>
-#include "RAM.hpp"
-#include "PPU.hpp"
+#include <iostream>
+#include <sstream>
+#include <vector>
+
 #include "Common/Typedefs.hpp"
 #include "Controller.hpp"
 #include "Mapper/Mapper.hpp"
+#include "PPU.hpp"
+#include "RAM.hpp"
 
-namespace MedNES
-{
+namespace MedNES {
 
-  struct ExecutionState
-  {
+struct ExecutionState {
     u8 accumulator;
     u8 xRegister;
     u8 yRegister;
@@ -23,30 +23,26 @@ namespace MedNES
     u8 stackPointer;
     u8 statusRegister;
     int cycle;
-  };
+};
 
-  class CPU6502
-  {
-
-    enum MemoryAccessMode
-    {
-      READ,
-      WRITE
+class CPU6502 {
+    enum MemoryAccessMode {
+        READ,
+        WRITE
     };
 
-    enum StatusFlags
-    {
-      NEGATIVE = 7,
-      OVERFLO = 6,
-      BREAK5 = 5,
-      BREAK4 = 4,
-      DECIMAL = 3,
-      INTERRUPT = 2,
-      ZERO = 1,
-      CARRY = 0
+    enum StatusFlags {
+        NEGATIVE = 7,
+        OVERFLO = 6,
+        BREAK5 = 5,
+        BREAK4 = 4,
+        DECIMAL = 3,
+        INTERRUPT = 2,
+        ZERO = 1,
+        CARRY = 0
     };
 
-  public:
+   public:
     CPU6502(Mapper *mapper, PPU *ppu, Controller *controller) : mapper(mapper), ppu(ppu), controller(controller){};
     u8 fetchInstruction();
     void executeInstruction(u8 instruction);
@@ -59,7 +55,7 @@ namespace MedNES
     void setProgramCounter(u16 pc);
     ExecutionState *getExecutionState();
 
-  private:
+   private:
     //Arithmetic
     u8 accumulator = 0;
     u8 xRegister = 0;
@@ -132,17 +128,17 @@ namespace MedNES
 
     void ADC(std::function<u16()>);
 
-    void ADC(u8); //for RRA
+    void ADC(u8);  //for RRA
 
     //And with accumulator
     void AND(std::function<u16()>);
 
-    void AND(u8); //for RLA
+    void AND(u8);  //for RLA
 
     //Arithmetic shift left
     void ASL(std::function<u16()>);
 
-    u8 ASL_val(u8); //for SLO
+    u8 ASL_val(u8);  //for SLO
 
     //Branch on carry clear
     void BCC(std::function<u16()>);
@@ -189,7 +185,7 @@ namespace MedNES
     //Compare (with accumulator}
     void CMP(std::function<u16()>);
 
-    void CMP(u8); //for DCP
+    void CMP(u8);  //for DCP
 
     //Compare with X
     void CPX(std::function<u16()>);
@@ -200,7 +196,7 @@ namespace MedNES
     //Decrement
     void DEC(std::function<u16()>);
 
-    u8 DEC(u8); //for DCP
+    u8 DEC(u8);  //for DCP
 
     //decrement X
     void DEX();
@@ -211,12 +207,12 @@ namespace MedNES
     //Exclusive or (with accumulator)
     void EOR(std::function<u16()>);
 
-    void EOR(u8); //for SRE
+    void EOR(u8);  //for SRE
 
     //Increment
     void INC(std::function<u16()>);
 
-    u8 INC(u8); //for ISB
+    u8 INC(u8);  //for ISB
 
     //Increment X
     void INX();
@@ -233,12 +229,12 @@ namespace MedNES
     //Load accumulator
     void LDA(std::function<u16()>);
 
-    void LDA(u8); //for LAX
+    void LDA(u8);  //for LAX
 
     //Load X
     void LDX(std::function<u16()>);
 
-    void LDX(u8); //for LAX
+    void LDX(u8);  //for LAX
 
     //Load Y
     void LDY(std::function<u16()>);
@@ -246,12 +242,12 @@ namespace MedNES
     //Logical shift right
     void LSR(std::function<u16()>);
 
-    u8 LSR_val(u8); //for SRE
+    u8 LSR_val(u8);  //for SRE
 
     //Or with accumulator
     void ORA(std::function<u16()>);
 
-    void ORA(u8); //for SLO
+    void ORA(u8);  //for SLO
 
     //Push accumulator
     void PHA();
@@ -273,7 +269,7 @@ namespace MedNES
     //Rotate right
     void ROR(std::function<u16()>);
 
-    u8 ROR_val(u8); //for RRA
+    u8 ROR_val(u8);  //for RRA
 
     //Return from interrupt
     void RTI();
@@ -284,7 +280,7 @@ namespace MedNES
     //Subtract with carrz
     void SBC(std::function<u16()>);
 
-    void SBC(u8); //for ISB
+    void SBC(u8);  //for ISB
 
     //Set carry
     void SEC();
@@ -346,6 +342,6 @@ namespace MedNES
     void tickIfToNewPage(u16, u16);
 
     inline void pushPC();
-  };
+};
 
-}; //namespace MedNES
+};  //namespace MedNES
