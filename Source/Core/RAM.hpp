@@ -1,23 +1,21 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+
 #include "Common/Typedefs.hpp"
 #include "INESBus.hpp"
 
-namespace MedNES
-{
+namespace MedNES {
 
-  class RAM : public INESBus
-  {
-
-  public:
+class RAM : public INESBus {
+   public:
     u8 read(u16 address);
     void write(u16 address, u8 data);
 
     //256 byte pages, 8 pages on internal NES RAM
-  private:
+   private:
     u8 ram[2048] = {0};
-  };
+};
 
-}; //namespace MedNES
+};  //namespace MedNES

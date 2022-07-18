@@ -1,15 +1,14 @@
 #pragma once
 #include <stdint.h>
+
 #include <vector>
+
 #include "../Common/Typedefs.hpp"
 
-namespace MedNES
-{
+namespace MedNES {
 
-  class Mapper
-  {
-
-  public:
+class Mapper {
+   public:
     Mapper(std::vector<u8> &prgCode, std::vector<u8> &chrROM, int mirroring) : prgCode(prgCode),
                                                                                chrROM(chrROM),
                                                                                mirroring(mirroring) {}
@@ -21,10 +20,10 @@ namespace MedNES
     virtual void ppuwrite(u16 address, u8 data);
     int getMirroring() { return mirroring; }
 
-  protected:
+   protected:
     std::vector<u8> prgCode;
     std::vector<u8> chrROM;
     int mirroring;
-  };
+};
 
-}; //namespace MedNES
+};  //namespace MedNES
