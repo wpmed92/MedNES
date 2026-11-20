@@ -73,7 +73,7 @@ u8 MMC1::read(u16 address) {
     if (controlReg.prgRomBankMode <= 1) {
         //ignore low bit of bankselect
         u8 bankSelect = prgBank & 0xE;
-        u32 address_32 = (address - 0x8000) + (bankSelect * 0x8000);
+        u32 address_32 = (address - 0x8000) + (bankSelect * 0x4000);
 
         return prgCode[address_32];
         //fixed first 0x8000, switch (16kb) upper
@@ -107,7 +107,7 @@ u8 MMC1::ppuread(u16 address) {
     //8kb mode
     if (controlReg.chrRomBankMode == 0) {
         //bit0 ignored
-        return chrROM[(chrBank0 & 0x1E) * 0x2000 + address];
+        return chrROM[(chrBank0 & 0x1E) * 0x1000 + address];
         //4kb mode
     } else {
         if (address < 0x1000) {
