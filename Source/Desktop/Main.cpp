@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iostream>
 #include <map>
+#include <thread>
 
 #include "../Core/6502.hpp"
 #include "../Core/Controller.hpp"
@@ -102,6 +103,10 @@ int main(int argc, char **argv) {
     float duration = 0;
     auto t1 = std::chrono::high_resolution_clock::now();
 
+    //NTSC frame rate
+    const auto frameDuration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(1.0 / 60.0988));
+    auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
+
     while (is_running) {
         cpu.step();
 
@@ -131,7 +136,7 @@ int main(int argc, char **argv) {
             //Measure fps
             nmiCounter++;
             auto t2 = std::chrono::high_resolution_clock::now();
-            duration += std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+            duration += std::chrono::duration<float, std::milli>(t2 - t1).count();
             t1 = std::chrono::high_resolution_clock::now();
 
             if (nmiCounter == 10) {
@@ -149,6 +154,17 @@ int main(int argc, char **argv) {
             SDL_RenderClear(s);
             SDL_RenderCopy(s, texture, NULL, NULL);
             SDL_RenderPresent(s);
+
+            if (!headlessMode) {
+                std::this_thread::sleep_until(nextFrame);
+                auto now = std::chrono::steady_clock::now();
+                nextFrame += frameDuration;
+
+                //Don't fast-forward to catch up after a stall
+                if (nextFrame < now) {
+                    nextFrame = now + frameDuration;
+                }
+            }
         }
     }
 
